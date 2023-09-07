@@ -1,8 +1,8 @@
-from board import *
 from configuration import *
 import customtkinter as ctk
-from PIL import Image
 import threading as th
+from PIL import Image
+from board import *
 import time as t
 
 
