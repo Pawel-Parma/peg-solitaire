@@ -122,18 +122,17 @@ class Board:
             new_board_object.move(move)
             solution.append(move)
 
-            if new_board_object.is_won() == 1:
+            if new_board_object.is_won():
                 self.skip = self.solved = 1
                 self.solution_list = copy.deepcopy(solution)
                 return solution
 
-            else:
-                self.__solution_helper(new_board_object, board_level + 1, solution)
-                try:
+            elif new_board_object.is_end():
+                if len(self.solution_list) != 0:
                     self.solution_list.pop(-1)
 
-                except:
-                    pass
+            else:
+                self.__solution_helper(new_board_object, board_level + 1, solution)
 
         return solution
 
