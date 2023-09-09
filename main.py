@@ -71,7 +71,7 @@ class App:
                                                           height=40 if k == 0 or k == 8 else self.size[1])
                     board_place_part_label.pack(pady=3, padx=3)
 
-        for i, v1 in enumerate(self.board.board):
+        for i, v1 in enumerate(self.board):
             for j, v2 in enumerate(v1):
                 board_frame_part = ctk.CTkFrame(self.game_frame, corner_radius=0, fg_color=self.color1_cyan,
                                                 border_width=10, border_color=self.color2_cyan_dark,
@@ -194,7 +194,7 @@ class App:
             self.end()
 
     def update_board(self):
-        for i, v1 in enumerate(self.board.board):
+        for i, v1 in enumerate(self.board):
             for j, v2 in enumerate(v1):
                 if v2 == 1:
                     if self.picked_pieces[i][j] == 1:
@@ -213,13 +213,13 @@ class App:
         self.root.update_idletasks()
 
     def inactivate_board(self):
-        for i, v1 in enumerate(self.board.board):
+        for i, v1 in enumerate(self.board):
             for j, v2 in enumerate(v1):
                 self.board_frame_list[i][j].unbind("<Button-1>")
                 self.board_label_list[i][j].unbind("<Button-1>")
 
     def activate_board(self):
-        for i, v1 in enumerate(self.board.board):
+        for i, v1 in enumerate(self.board):
             for j, v2 in enumerate(v1):
                 self.board_frame_list[i][j].bind("<Button-1>", lambda e, y=i, x=j: self.square_pressed(y, x))
                 self.board_label_list[i][j].bind("<Button-1>", lambda e, y=i, x=j: self.square_pressed(y, x))
@@ -314,7 +314,8 @@ class App:
                                                 "Initial Balls: 0")
 
     def save(self):
-        pass
+        self.main_frame.pack_forget()
+        self.main_frame.pack()
 
     def load(self):
         pass
@@ -335,12 +336,12 @@ class App:
         self.solution_main_frame = ctk.CTkFrame(self.solution_root, fg_color="transparent")
         self.solution_main_frame.pack()
 
-        self.name_solution_label = ctk.CTkLabel(self.solution_main_frame, text="Solution", text_color=self.color3_orange,
-                                             font=("", 60))
+        self.name_solution_label = ctk.CTkLabel(self.solution_main_frame, text="Solution",
+                                                text_color=self.color3_orange, font=("", 60))
         self.name_solution_label.pack()
 
         text = ""
-        moves = list(enumerate(self.board.translate_moves(self.board.solution())))
+        moves = list(enumerate(translate_moves(self.board.solution())))
         if moves:
             size = 30
             for i, move in moves:
@@ -351,8 +352,6 @@ class App:
         else:
             size = 50
             text = "None"
-
-        print(text)
 
         self.solution_label = ctk.CTkLabel(self.solution_main_frame, text_color=self.color1_cyan, font=("", size),
                                         text=text)
@@ -438,7 +437,7 @@ class App:
 
             elif self.history[self.history_current_place][0] == "M":
                 move = self.history[self.history_current_place][1]
-                (_, _), (y2, x2), (_, _) = self.board.process_move(move)
+                (_, _), (y2, x2), (_, _) = process_move(move)
                 self.board.interact(y2, x2)
                 self.board.move(move[::-1])
                 self.board.interact(y2, x2)
