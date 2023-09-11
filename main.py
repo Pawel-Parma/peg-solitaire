@@ -4,11 +4,14 @@ import threading as th
 from PIL import Image
 from board import *
 import time as t
+import pickle
+import os
 
 
-# Implement Save
-# Implement Load
-# Make Board Solvable
+# Implement Load, Delete
+# Implement my own CTkInputDialog
+# Implement Confirm Button for Solution, Solve
+# Implement Board Solution
 # Implement Solution
 
 
@@ -66,7 +69,7 @@ class App:
                     board_place_part_frame.grid(column=j + 1, row=k)
 
                     board_place_part_label = ctk.CTkLabel(board_place_part_frame, text=f"{8 - k}"
-                                                          if not (k == 0 or k == 8) else "", font=("", 30),
+                    if not (k == 0 or k == 8) else "", font=("", 30),
                                                           width=40 if j == 0 or j == 8 else self.size[0],
                                                           height=40 if k == 0 or k == 8 else self.size[1])
                     board_place_part_label.pack(pady=3, padx=3)
@@ -150,8 +153,11 @@ class App:
         self.rules_root_is_active = 0
         self.win_root_is_active = 0
         self.solution_root_is_active = 0
+        self.save_root_is_active = 0
+        self.load_root_is_active = 0
         self.history = []
         self.history_current_place = -1
+        self.blocked = ["<", ">", ":", ";", "\"", "\'", "/", "\\", "|", "?", "*", ",", "."]
 
     def square_pressed(self, y, x):
         if self.playing == 1:
@@ -240,7 +246,7 @@ class App:
         self.win_root_is_active = 1
         self.win_root = ctk.CTkToplevel()
         self.win_root.title(title)
-        self.win_root.iconbitmap(logo_path)
+        self.win_root.after(201, lambda: self.win_root.iconbitmap(logo_path))
         self.win_root.attributes('-topmost', True)
         self.win_root.geometry(f"{550}x{180}-{0}+{0}")
         self.win_root.resizable(False, False)
@@ -265,7 +271,7 @@ class App:
             self.rules_root_is_active = 1
             self.rules_root = ctk.CTkToplevel()
             self.rules_root.title("Rules")
-            self.rules_root.iconbitmap(logo_path)
+            self.rules_root.after(201, lambda: self.rules_root.iconbitmap(logo_path))
             self.rules_root.attributes('-topmost', True)
             self.rules_root.geometry(f"{750}x{380}-{0}+{0}")
             self.rules_root.resizable(False, False)
@@ -314,8 +320,84 @@ class App:
                                                 "Initial Balls: 0")
 
     def save(self):
-        self.main_frame.pack_forget()
-        self.main_frame.pack()
+        if self.save_root_is_active == 0:
+            self.save_root_is_active = 1
+            self.save_root = ctk.CTkToplevel()
+            self.save_root.title("Save")
+            self.save_root.after(201, lambda: self.save_root.iconbitmap(logo_path))
+            self.save_root.attributes('-topmost', True)
+            self.save_root.geometry(f"{750}x{200}-{0}+{0}")
+            self.save_root.resizable(False, False)
+            self.save_root.protocol("WM_DELETE_WINDOW", self.save_exit)
+
+            self.save_main_frame = ctk.CTkFrame(self.save_root, fg_color="transparent")
+            self.save_main_frame.pack()
+
+            self.save_label = ctk.CTkLabel(self.save_main_frame, text="Do you want to save this board",
+                                           text_color=self.color3_orange, font=("", 40))
+            self.save_label.pack(pady=20)
+            self.yes_button = ctk.CTkButton(self.save_main_frame, text='Yes', font=("", 40),
+                                            fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                            command=self.save_get_name)
+            self.yes_button.pack(side="left", padx=70, pady=25)
+
+            self.no_button = ctk.CTkButton(self.save_main_frame, text='No', font=("", 40),
+                                           fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                           command=self.save_exit)
+            self.no_button.pack(side="right", padx=70, pady=25)
+
+    def save_exit(self):
+        self.save_root_is_active = 0
+        self.save_root.destroy()
+
+    def save_get_name(self):
+        text1 = "Type in a file name"
+        text2 = "File with this name already exists\n" \
+                "Type in another file name"
+        text3 = "The file name is incorrect\n" \
+                "Type in another file name"
+
+        ctk.CTkTextbox(self.root).pack()
+
+        while 1:
+            dialog_root = ctk.CTkInputDialog(text=text1, title="File name",
+                                             button_hover_color=self.color2_cyan_dark,
+                                             button_fg_color=self.color1_cyan)
+            dialog_root.after(201, lambda: dialog_root.iconbitmap(logo_path))
+
+            text = dialog_root.get_input()
+
+            if text is not None:
+                if self.is_text_legal(text):
+                    text += ".dat"
+
+                    print(os.listdir("Saves"))
+                    print(text)
+                    if text not in os.listdir("Saves"):
+                        print(1)
+                        with open("Saves\\" + text, 'wb') as f:
+                            pickle.dump(self.board, f)
+                            self.save_exit()
+
+                        break
+
+                    else:
+                        print(2)
+                        text1 = text2
+
+                else:
+                    text1 = text3
+
+            else:
+                break
+
+    def is_text_legal(self, text):
+        if len(text) > 0:
+            if not text[0].isdigit():
+                if "".join([y for y in text if y not in self.blocked]) == text:
+                    return 1
+
+        return 0
 
     def load(self):
         pass
@@ -327,7 +409,7 @@ class App:
         self.solution_root_is_active = 1
         self.solution_root = ctk.CTkToplevel()
         self.solution_root.title("Solution")
-        self.solution_root.iconbitmap(logo_path)
+        self.solution_root.after(201, lambda: self.solution_root.iconbitmap(logo_path))
         self.solution_root.attributes('-topmost', True)
         self.solution_root.geometry(f"{750}x{380}-{0}+{0}")
         self.solution_root.resizable(False, False)
@@ -354,7 +436,7 @@ class App:
             text = "None"
 
         self.solution_label = ctk.CTkLabel(self.solution_main_frame, text_color=self.color1_cyan, font=("", size),
-                                        text=text)
+                                           text=text)
         self.solution_label.pack(pady=10)
 
     def solution_exit(self):
@@ -384,6 +466,7 @@ class App:
         self.redo_button.configure(state="enabled")
         self.root.bind("<Control-y>", lambda e: self.redo())
         self.root.bind("<Control-z>", lambda e: self.undo())
+        self.play()
         self.activate_board()
         self.end()
 
@@ -415,7 +498,7 @@ class App:
         elif self.history_current_place < len(self.history) - 1:
             if self.history[self.history_current_place][1] != action:
                 self.history = self.history[:self.history_current_place + 1 if
-                                            self.history_current_place < len(self.history) - 1 else None]
+                self.history_current_place < len(self.history) - 1 else None]
 
                 if state == "interact":
                     self.history.append(("I", action))
