@@ -3,13 +3,14 @@ import customtkinter as ctk
 import threading as th
 from PIL import Image
 from board import *
+import pyautogui
 import time as t
 import pickle
 import os
 
 
-# Implement Load, Delete
 # Implement my own CTkInputDialog
+# Implement Load, Delete
 # Implement Confirm Button for Solution, Solve
 # Implement Board Solution
 # Implement Solution
@@ -336,15 +337,15 @@ class App:
             self.save_label = ctk.CTkLabel(self.save_main_frame, text="Do you want to save this board",
                                            text_color=self.color3_orange, font=("", 40))
             self.save_label.pack(pady=20)
-            self.yes_button = ctk.CTkButton(self.save_main_frame, text='Yes', font=("", 40),
+            self.save_yes_button = ctk.CTkButton(self.save_main_frame, text='Yes', font=("", 40),
                                             fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
                                             command=self.save_get_name)
-            self.yes_button.pack(side="left", padx=70, pady=25)
+            self.save_yes_button.pack(side="left", padx=70, pady=25)
 
-            self.no_button = ctk.CTkButton(self.save_main_frame, text='No', font=("", 40),
+            self.save_no_button = ctk.CTkButton(self.save_main_frame, text='No', font=("", 40),
                                            fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
                                            command=self.save_exit)
-            self.no_button.pack(side="right", padx=70, pady=25)
+            self.save_no_button.pack(side="right", padx=70, pady=25)
 
     def save_exit(self):
         self.save_root_is_active = 0
@@ -358,31 +359,35 @@ class App:
                 "Type in another file name"
 
         ctk.CTkTextbox(self.root).pack()
+        dialog_root = ctk.CTkInputDialog(text=text1, title="File name",
+                                         button_hover_color=self.color2_cyan_dark,
+                                         button_fg_color=self.color1_cyan)
+
+        dialog_root.after(201, lambda: dialog_root.iconbitmap(logo_path))
 
         while 1:
-            dialog_root = ctk.CTkInputDialog(text=text1, title="File name",
-                                             button_hover_color=self.color2_cyan_dark,
-                                             button_fg_color=self.color1_cyan)
-            dialog_root.after(201, lambda: dialog_root.iconbitmap(logo_path))
+
+
+            # self.dialog_root = ctk.CTkToplevel()
+            # self.dialog_root.title("File name")
+            # self.dialog_root.attributes("-topmost", True)
+            # self.dialog_root.resizable(False, False)
+            # self.dialog_root.grab_set()
+            # dialog_root_label = ctk.CTkLabel(dialog_root, text=text1, )
+
 
             text = dialog_root.get_input()
 
             if text is not None:
                 if self.is_text_legal(text):
-                    text += ".dat"
-
-                    print(os.listdir("Saves"))
-                    print(text)
                     if text not in os.listdir("Saves"):
-                        print(1)
-                        with open("Saves\\" + text, 'wb') as f:
-                            pickle.dump(self.board, f)
-                            self.save_exit()
-
+                        self.all_exit()
+                        self.root.after(150, lambda: self.save_data(text))
+                        self.history_current_place = -1
+                        self.history = []
                         break
 
                     else:
-                        print(2)
                         text1 = text2
 
                 else:
@@ -390,6 +395,16 @@ class App:
 
             else:
                 break
+
+    def all_exit(self):
+        exits = (self.rules_exit, self.win_exit, self.save_exit, self.load_exit, self.solution_exit)
+
+        for exit_func in exits:
+            try:
+                exit_func()
+
+            except:
+                pass
 
     def is_text_legal(self, text):
         if len(text) > 0:
@@ -399,8 +414,55 @@ class App:
 
         return 0
 
+    def save_data(self, text):
+        dir_name = f"Saves\\{text}\\"
+        os.mkdir(dir_name)
+
+        with open(f"{dir_name}" + text + ".dat", 'wb') as f:
+            x, y = self.game_frame.winfo_rootx(), self.game_frame.winfo_rooty()
+            w, h = self.game_frame.winfo_width(), self.game_frame.winfo_height()
+            mw, mh = 280, 200
+            ratio = min(mw/w, mh/h)
+            hn = int(h * ratio)
+            wn = int(w * ratio)
+
+            img = pyautogui.screenshot(region=(x, y, w, h))
+            img.save(f"{dir_name}" + text + "_original" + ".jpg")
+            img = img.resize((hn, wn))
+            img.save(f"{dir_name}" + text + ".jpg")
+            pickle.dump(self.board, f)
+
     def load(self):
-        pass
+        if self.load_root_is_active == 0:
+            self.load_root_is_active = 1
+            self.load_root = ctk.CTkToplevel()
+            self.load_root.title("Load")
+            self.load_root.after(201, lambda: self.load_root.iconbitmap(logo_path))
+            self.load_root.attributes('-topmost', True)
+            self.load_root.geometry(f"{750}x{200}-{0}+{0}")
+            self.load_root.resizable(False, False)
+            self.load_root.protocol("WM_DELETE_WINDOW", self.load_exit)
+
+            self.load_main_frame = ctk.CTkFrame(self.load_root, fg_color="transparent")
+            self.load_main_frame.pack()
+
+            self.load_label = ctk.CTkLabel(self.load_main_frame, text="Do you want to save this board",
+                                           text_color=self.color3_orange, font=("", 40))
+            self.load_label.pack(pady=20)
+
+            self.load_yes_button = ctk.CTkButton(self.load_main_frame, text='Yes', font=("", 40),
+                                            fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                            command=self.save_get_name)
+            self.load_yes_button.pack(side="left", padx=70, pady=25)
+
+            self.load_no_button = ctk.CTkButton(self.load_main_frame, text='No', font=("", 40),
+                                           fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                           command=self.save_exit)
+            self.load_no_button.pack(side="right", padx=70, pady=25)
+
+    def load_exit(self):
+        self.load_root_is_active = 0
+        self.load_root.destroy()
 
     def solution(self):
         if self.solution_root_is_active == 1:
