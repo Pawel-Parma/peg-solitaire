@@ -9,7 +9,6 @@ import pickle
 import os
 
 
-# Implement Confirm Button for Solution, Solve
 # Implement Load, Delete
 # Implement Board Solution
 # Implement Solution
@@ -110,7 +109,7 @@ class App:
         self.balls_counter_label = ctk.CTkLabel(self.balls_counter_frame, text="Current Balls: 0\n"
                                                                                "Initial Balls: 0",
                                                 font=("", 35), text_color=self.color3_orange)
-        self.balls_counter_label.pack()
+        self.balls_counter_label.pack(pady=10)
 
         self.play_setpos_button = ctk.CTkButton(self.right_buttons_1_widgets_frame, text='Play', font=("", 40),
                                                 fg_color=self.color1_cyan,
@@ -118,7 +117,7 @@ class App:
         self.play_setpos_button.pack(side="left", pady=5)
         self.reset_pos_button = ctk.CTkButton(self.right_buttons_1_widgets_frame, text='Reset', font=("", 40),
                                               fg_color=self.color1_cyan,
-                                              hover_color=self.color2_cyan_dark, command=self.reset)
+                                              hover_color=self.color2_cyan_dark, command=lambda: self.confirm("reset"))
         self.reset_pos_button.pack(side="left", padx=10, pady=5)
 
         self.save_button = ctk.CTkButton(self.right_buttons_2_widgets_frame, text='Save', font=("", 40),
@@ -132,11 +131,11 @@ class App:
 
         self.solution_button = ctk.CTkButton(self.right_buttons_3_widgets_frame, text='Sollution', font=("", 40),
                                              fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                             command=self.solution, width=240)
+                                             command=lambda: self.confirm("solution"), width=240)
         self.solution_button.pack(side="left", pady=5)
         self.solve_button = ctk.CTkButton(self.right_buttons_3_widgets_frame, text='Solve', font=("", 40),
                                           fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                          command=self.solve)
+                                          command=lambda: self.confirm("solve"))
         self.solve_button.pack(side="left", padx=10, pady=5)
 
         self.undo_button = ctk.CTkButton(self.right_buttons_4_widgets_frame, text='Undo', font=("", 40),
@@ -477,6 +476,42 @@ class App:
     def load_exit(self):
         self.load_root_is_active = 0
         self.load_root.destroy()
+
+    def confirm(self, flavour):
+        self.confirm_root = ctk.CTkToplevel()
+        self.confirm_root.geometry("630x190")
+        self.confirm_root.after(201, lambda: self.confirm_root.iconbitmap(logo_path))
+        self.confirm_root.title("Confirm")
+        self.confirm_root.attributes("-topmost", True)
+        self.confirm_root.resizable(False, False)
+        self.confirm_root.grab_set()
+        self.confirm_root_label = ctk.CTkLabel(self.confirm_root, text="Are you sure you want to proceed",
+                                               font=("", 40), text_color=color_orange)
+        self.confirm_root_label.pack(pady=20)
+        self.confirm_root_yes_button = ctk.CTkButton(self.confirm_root, text='Yes', font=("", 40),
+                                                     fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                                     command=lambda: self.confirm_root_yes_button_pressed(flavour))
+        self.confirm_root_yes_button.pack(side="left", padx=50)
+
+        self.confirm_root_no_button = ctk.CTkButton(self.confirm_root, text='No', font=("", 40),
+                                                    fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                                    command=self.confirm_root_no_button_pressed)
+        self.confirm_root_no_button.pack(side="right", padx=50)
+
+    def confirm_root_yes_button_pressed(self, flavour):
+        self.confirm_root.destroy()
+
+        if flavour == "solution":
+            self.solution()
+
+        elif flavour == "solve":
+            self.solve()
+
+        elif flavour == "reset":
+            self.reset()
+
+    def confirm_root_no_button_pressed(self):
+        self.confirm_root.destroy()
 
     def solution(self):
         if self.solution_root_is_active == 1:
