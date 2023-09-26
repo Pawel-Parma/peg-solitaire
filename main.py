@@ -9,9 +9,8 @@ import pickle
 import os
 
 
-# Implement my own CTkInputDialog
-# Implement Load, Delete
 # Implement Confirm Button for Solution, Solve
+# Implement Load, Delete
 # Implement Board Solution
 # Implement Solution
 
@@ -338,13 +337,13 @@ class App:
                                            text_color=self.color3_orange, font=("", 40))
             self.save_label.pack(pady=20)
             self.save_yes_button = ctk.CTkButton(self.save_main_frame, text='Yes', font=("", 40),
-                                            fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                            command=self.save_get_name)
+                                                 fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                                 command=self.save_get_name)
             self.save_yes_button.pack(side="left", padx=70, pady=25)
 
             self.save_no_button = ctk.CTkButton(self.save_main_frame, text='No', font=("", 40),
-                                           fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                           command=self.save_exit)
+                                                fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                                command=self.save_exit)
             self.save_no_button.pack(side="right", padx=70, pady=25)
 
     def save_exit(self):
@@ -352,49 +351,64 @@ class App:
         self.save_root.destroy()
 
     def save_get_name(self):
-        text1 = "Type in a file name"
-        text2 = "File with this name already exists\n" \
-                "Type in another file name"
-        text3 = "The file name is incorrect\n" \
-                "Type in another file name"
+        self.save_text1 = "Type in a file name\n"
+        self.save_text2 = "File with this name already exists\n" \
+                          "Type in another file name"
+        self.save_text3 = "The file name is incorrect\n" \
+                          "Type in another file name"
+        self.save_dir_name = ""
 
-        ctk.CTkTextbox(self.root).pack()
-        dialog_root = ctk.CTkInputDialog(text=text1, title="File name",
-                                         button_hover_color=self.color2_cyan_dark,
-                                         button_fg_color=self.color1_cyan)
+        self.dialog_root = ctk.CTkToplevel()
+        self.dialog_root.geometry("640x280")
+        self.dialog_root.after(201, lambda: self.dialog_root.iconbitmap(logo_path))
+        self.dialog_root.title("Enter file name")
+        self.dialog_root.attributes("-topmost", True)
+        self.dialog_root.protocol("WM_DELETE_WINDOW", self.dialog_root_exit)
+        self.dialog_root.resizable(False, False)
+        self.dialog_root.grab_set()
+        self.dialog_root_label = ctk.CTkLabel(self.dialog_root, text=self.save_text1, font=("", 40),
+                                              text_color=color_orange)
+        self.dialog_root_label.pack(pady=20)
+        self.dialog_root_entry = ctk.CTkEntry(self.dialog_root, width=350, height=40)
+        self.dialog_root_entry.pack()
+        self.dialog_root.after(150, lambda: self.dialog_root_entry.focus())
+        self.dialog_root_entry.select_present()
+        self.dialog_root_ok_button = ctk.CTkButton(self.dialog_root, text='Ok', font=("", 40),
+                                                   fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                                   command=self.dialog_root_ok_button_pressed)
+        self.dialog_root_ok_button.pack(side="left", padx=70, pady=25)
 
-        dialog_root.after(201, lambda: dialog_root.iconbitmap(logo_path))
+        self.dialog_root_cancel_button = ctk.CTkButton(self.dialog_root, text='Cancel', font=("", 40),
+                                                       fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                                       command=self.dialog_root_cancel_button_pressed)
+        self.dialog_root_cancel_button.pack(side="right", padx=70, pady=25)
 
-        while 1:
+    def dialog_root_exit(self):
+        self.dialog_root.destroy()
 
+    def dialog_root_ok_button_pressed(self):
+        self.save_dir_name = self.dialog_root_entry.get()
 
-            # self.dialog_root = ctk.CTkToplevel()
-            # self.dialog_root.title("File name")
-            # self.dialog_root.attributes("-topmost", True)
-            # self.dialog_root.resizable(False, False)
-            # self.dialog_root.grab_set()
-            # dialog_root_label = ctk.CTkLabel(dialog_root, text=text1, )
-
-
-            text = dialog_root.get_input()
-
-            if text is not None:
-                if self.is_text_legal(text):
-                    if text not in os.listdir("Saves"):
-                        self.all_exit()
-                        self.root.after(150, lambda: self.save_data(text))
-                        self.history_current_place = -1
-                        self.history = []
-                        break
-
-                    else:
-                        text1 = text2
+        if self.save_dir_name is not None:
+            if self.is_text_legal(self.save_dir_name):
+                if self.save_dir_name not in os.listdir("Saves"):
+                    self.all_exit()
+                    self.root.after(160, lambda: self.save_data(self.save_dir_name))
+                    self.history_current_place = -1
+                    self.history = []
+                    self.dialog_root.destroy()
 
                 else:
-                    text1 = text3
+                    self.dialog_root_label.configure(text=self.save_text2)
 
             else:
-                break
+                self.dialog_root_label.configure(text=self.save_text3)
+
+        else:
+            self.dialog_root.destroy()
+
+    def dialog_root_cancel_button_pressed(self):
+        self.dialog_root.destroy()
 
     def all_exit(self):
         exits = (self.rules_exit, self.win_exit, self.save_exit, self.load_exit, self.solution_exit)
@@ -422,7 +436,7 @@ class App:
             x, y = self.game_frame.winfo_rootx(), self.game_frame.winfo_rooty()
             w, h = self.game_frame.winfo_width(), self.game_frame.winfo_height()
             mw, mh = 280, 200
-            ratio = min(mw/w, mh/h)
+            ratio = min(mw / w, mh / h)
             hn = int(h * ratio)
             wn = int(w * ratio)
 
@@ -451,13 +465,13 @@ class App:
             self.load_label.pack(pady=20)
 
             self.load_yes_button = ctk.CTkButton(self.load_main_frame, text='Yes', font=("", 40),
-                                            fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                            command=self.save_get_name)
+                                                 fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                                 command=self.save_get_name)
             self.load_yes_button.pack(side="left", padx=70, pady=25)
 
             self.load_no_button = ctk.CTkButton(self.load_main_frame, text='No', font=("", 40),
-                                           fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                           command=self.save_exit)
+                                                fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                                command=self.save_exit)
             self.load_no_button.pack(side="right", padx=70, pady=25)
 
     def load_exit(self):
