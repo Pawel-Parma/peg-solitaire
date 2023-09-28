@@ -11,7 +11,6 @@ import os
 
 # Implement Load, Delete
 # Implement Board Solution
-# Implement Solution
 
 
 class App:
@@ -122,7 +121,7 @@ class App:
 
         self.save_button = ctk.CTkButton(self.right_buttons_2_widgets_frame, text='Save', font=("", 40),
                                          fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                         command=self.save, width=240)
+                                         command=lambda: self.confirm("save"), width=240)
         self.save_button.pack(side="left", pady=5)
         self.load_button = ctk.CTkButton(self.right_buttons_2_widgets_frame, text='Load', font=("", 40),
                                          fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
@@ -318,38 +317,11 @@ class App:
         self.balls_counter_label.configure(text="Current Balls: 0\n"
                                                 "Initial Balls: 0")
 
-    def save(self):
-        if self.save_root_is_active == 0:
-            self.save_root_is_active = 1
-            self.save_root = ctk.CTkToplevel()
-            self.save_root.title("Save")
-            self.save_root.after(201, lambda: self.save_root.iconbitmap(logo_path))
-            self.save_root.attributes('-topmost', True)
-            self.save_root.geometry(f"{750}x{200}-{0}+{0}")
-            self.save_root.resizable(False, False)
-            self.save_root.protocol("WM_DELETE_WINDOW", self.save_exit)
-
-            self.save_main_frame = ctk.CTkFrame(self.save_root, fg_color="transparent")
-            self.save_main_frame.pack()
-
-            self.save_label = ctk.CTkLabel(self.save_main_frame, text="Do you want to save this board",
-                                           text_color=self.color3_orange, font=("", 40))
-            self.save_label.pack(pady=20)
-            self.save_yes_button = ctk.CTkButton(self.save_main_frame, text='Yes', font=("", 40),
-                                                 fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                                 command=self.save_get_name)
-            self.save_yes_button.pack(side="left", padx=70, pady=25)
-
-            self.save_no_button = ctk.CTkButton(self.save_main_frame, text='No', font=("", 40),
-                                                fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                                command=self.save_exit)
-            self.save_no_button.pack(side="right", padx=70, pady=25)
-
     def save_exit(self):
         self.save_root_is_active = 0
         self.save_root.destroy()
 
-    def save_get_name(self):
+    def save(self):
         self.save_text1 = "Type in a file name\n"
         self.save_text2 = "File with this name already exists\n" \
                           "Type in another file name"
@@ -372,6 +344,7 @@ class App:
         self.dialog_root_entry.pack()
         self.dialog_root.after(150, lambda: self.dialog_root_entry.focus())
         self.dialog_root_entry.select_present()
+
         self.dialog_root_ok_button = ctk.CTkButton(self.dialog_root, text='Ok', font=("", 40),
                                                    fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
                                                    command=self.dialog_root_ok_button_pressed)
@@ -447,31 +420,60 @@ class App:
 
     def load(self):
         if self.load_root_is_active == 0:
+            self.list_of_saves = os.listdir("Saves")
+            self.current_load_save_page = 1
+
             self.load_root_is_active = 1
             self.load_root = ctk.CTkToplevel()
             self.load_root.title("Load")
             self.load_root.after(201, lambda: self.load_root.iconbitmap(logo_path))
             self.load_root.attributes('-topmost', True)
-            self.load_root.geometry(f"{750}x{200}-{0}+{0}")
+            # self.load_root.geometry(f"{750}x{200}-{0}+{0}")
             self.load_root.resizable(False, False)
             self.load_root.protocol("WM_DELETE_WINDOW", self.load_exit)
 
-            self.load_main_frame = ctk.CTkFrame(self.load_root, fg_color="transparent")
-            self.load_main_frame.pack()
+            self.load_root_main_frame = ctk.CTkFrame(self.load_root, fg_color="transparent")
+            self.load_root_main_frame.pack()
 
-            self.load_label = ctk.CTkLabel(self.load_main_frame, text="Do you want to save this board",
-                                           text_color=self.color3_orange, font=("", 40))
-            self.load_label.pack(pady=20)
+            self.load_root_label = ctk.CTkLabel(self.load_root_main_frame, text="Load saves", font=("", 60),
+                                                text_color=color_orange)
+            self.load_root_label.pack(pady=20)
 
-            self.load_yes_button = ctk.CTkButton(self.load_main_frame, text='Yes', font=("", 40),
-                                                 fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                                 command=self.save_get_name)
-            self.load_yes_button.pack(side="left", padx=70, pady=25)
+            self.load_root_saves_frame = ctk.CTkFrame(self.load_root_main_frame, fg_color="transparent")
+            self.load_root_saves_frame.pack()
 
-            self.load_no_button = ctk.CTkButton(self.load_main_frame, text='No', font=("", 40),
-                                                fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                                command=self.save_exit)
-            self.load_no_button.pack(side="right", padx=70, pady=25)
+            #
+            #
+            #
+
+            self.load_root_previous_button = ctk.CTkButton(self.load_root_main_frame, text='Previous', font=("", 40),
+                                                           fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                                           command=self.previous, width=200)
+            self.load_root_previous_button.pack(side="left", padx=70, pady=30)
+
+            self.load_root_next_button = ctk.CTkButton(self.load_root_main_frame, text='Next', font=("", 40),
+                                                       fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                                       command=self.next, width=200)
+            self.load_root_next_button.pack(side="right", padx=70, pady=30)
+
+    def show_new_load_saves_page(self):
+        pass
+
+    def previous(self):
+        pass
+
+    def next(self):
+        pass
+
+    def load_board(self, folder_name):
+        with open(f"Saves\\{folder_name}\\{folder_name}.dat", "rb") as f:
+            new_board = pickle.load(f)
+
+        self.reset()
+        self.board = new_board
+        self.update_board()
+        self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n"
+                                                f"Initial Balls: {self.board.count(1)}")
 
     def load_exit(self):
         self.load_root_is_active = 0
@@ -479,24 +481,29 @@ class App:
 
     def confirm(self, flavour):
         self.confirm_root = ctk.CTkToplevel()
-        self.confirm_root.geometry("630x190")
+        self.confirm_root.geometry("750x200")
         self.confirm_root.after(201, lambda: self.confirm_root.iconbitmap(logo_path))
         self.confirm_root.title("Confirm")
         self.confirm_root.attributes("-topmost", True)
         self.confirm_root.resizable(False, False)
         self.confirm_root.grab_set()
-        self.confirm_root_label = ctk.CTkLabel(self.confirm_root, text="Are you sure you want to proceed",
+
+        self.confirm_main_frame = ctk.CTkFrame(self.confirm_root, fg_color="transparent")
+        self.confirm_main_frame.pack()
+
+        self.confirm_root_label = ctk.CTkLabel(self.confirm_main_frame, text="Are you sure you want to proceed",
                                                font=("", 40), text_color=color_orange)
         self.confirm_root_label.pack(pady=20)
-        self.confirm_root_yes_button = ctk.CTkButton(self.confirm_root, text='Yes', font=("", 40),
+
+        self.confirm_root_yes_button = ctk.CTkButton(self.confirm_main_frame, text='Yes', font=("", 40),
                                                      fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
                                                      command=lambda: self.confirm_root_yes_button_pressed(flavour))
-        self.confirm_root_yes_button.pack(side="left", padx=50)
+        self.confirm_root_yes_button.pack(side="left", padx=70, pady=25)
 
-        self.confirm_root_no_button = ctk.CTkButton(self.confirm_root, text='No', font=("", 40),
+        self.confirm_root_no_button = ctk.CTkButton(self.confirm_main_frame, text='No', font=("", 40),
                                                     fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
                                                     command=self.confirm_root_no_button_pressed)
-        self.confirm_root_no_button.pack(side="right", padx=50)
+        self.confirm_root_no_button.pack(side="right", padx=70, pady=25)
 
     def confirm_root_yes_button_pressed(self, flavour):
         self.confirm_root.destroy()
@@ -509,6 +516,9 @@ class App:
 
         elif flavour == "reset":
             self.reset()
+
+        elif flavour == "save":
+            self.save()
 
     def confirm_root_no_button_pressed(self):
         self.confirm_root.destroy()
@@ -558,7 +568,7 @@ class App:
         self.inactivate_board()
 
         for move in self.board_solution:
-            # t.sleep(1)
+            t.sleep(1)
             self.board.move(move)
             self.history_tracker("move", move)
             self.update_board()
