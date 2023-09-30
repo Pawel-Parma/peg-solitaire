@@ -1,3 +1,4 @@
+from natsort import humansorted
 from configuration import *
 import customtkinter as ctk
 import threading as th
@@ -9,7 +10,10 @@ import pickle
 import os
 
 
-# Implement Load, Delete
+# Optimize everything and widget creaction more in __init__ with
+# self.rules_root.state("withdrawn")
+# normal, iconic, withdrawn, or zoomed
+
 # Implement Board Solution
 
 
@@ -156,6 +160,7 @@ class App:
         self.history = []
         self.history_current_place = -1
         self.blocked = ["<", ">", ":", ";", "\"", "\'", "/", "\\", "|", "?", "*", ",", "."]
+        self.load_folder_name = None
 
     def square_pressed(self, y, x):
         if self.playing == 1:
@@ -292,6 +297,12 @@ class App:
                                                  "which must be in the middle hole.\n")
             self.rules_label.pack()
 
+        else:
+            print(self.rules_root.winfo_viewable())
+
+            self.rules_root.state("withdrawn")
+            # normal, iconic, withdrawn, or zoomed
+
     def rules_exit(self):
         self.rules_root_is_active = 0
         self.rules_root.destroy()
@@ -365,7 +376,7 @@ class App:
             if self.is_text_legal(self.save_dir_name):
                 if self.save_dir_name not in os.listdir("Saves"):
                     self.all_exit()
-                    self.root.after(160, lambda: self.save_data(self.save_dir_name))
+                    self.root.after(170, lambda: self.save_data(self.save_dir_name))
                     self.history_current_place = -1
                     self.history = []
                     self.dialog_root.destroy()
@@ -404,23 +415,17 @@ class App:
         dir_name = f"Saves\\{text}\\"
         os.mkdir(dir_name)
 
-        with open(f"{dir_name}" + text + ".dat", 'wb') as f:
+        with open(f"{dir_name}{text}.dat", 'wb') as f:
             x, y = self.game_frame.winfo_rootx(), self.game_frame.winfo_rooty()
             w, h = self.game_frame.winfo_width(), self.game_frame.winfo_height()
-            mw, mh = 280, 200
-            ratio = min(mw / w, mh / h)
-            hn = int(h * ratio)
-            wn = int(w * ratio)
-
             img = pyautogui.screenshot(region=(x, y, w, h))
-            img.save(f"{dir_name}" + text + "_original" + ".jpg")
-            img = img.resize((hn, wn))
-            img.save(f"{dir_name}" + text + ".jpg")
+            img.save(f"{dir_name}{text}.jpg")
             pickle.dump(self.board, f)
 
     def load(self):
         if self.load_root_is_active == 0:
-            self.list_of_saves = os.listdir("Saves")
+            self.list_of_saves = humansorted(os.listdir("Saves"))
+            self.load_folder_name = "a"
             self.current_load_save_page = 1
 
             self.load_root_is_active = 1
@@ -428,7 +433,7 @@ class App:
             self.load_root.title("Load")
             self.load_root.after(201, lambda: self.load_root.iconbitmap(logo_path))
             self.load_root.attributes('-topmost', True)
-            # self.load_root.geometry(f"{750}x{200}-{0}+{0}")
+            self.load_root.geometry(f"{800}x{550}-{0}+{0}")
             self.load_root.resizable(False, False)
             self.load_root.protocol("WM_DELETE_WINDOW", self.load_exit)
 
@@ -439,71 +444,125 @@ class App:
                                                 text_color=color_orange)
             self.load_root_label.pack(pady=20)
 
-            self.load_root_saves_frame = ctk.CTkFrame(self.load_root_main_frame, fg_color="transparent")
-            self.load_root_saves_frame.pack()
+            self.load_root_saves_frame_1 = ctk.CTkFrame(self.load_root_main_frame, fg_color="transparent")
+            self.load_root_saves_frame_1.pack()
+            self.show_load_saves_page()
 
-            #
-            #
-            #
-
-            self.load_root_previous_button = ctk.CTkButton(self.load_root_main_frame, text='Previous', font=("", 40),
-                                                           fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                                           command=self.previous, width=200)
-            self.load_root_previous_button.pack(side="left", padx=70, pady=30)
-
-            self.load_root_next_button = ctk.CTkButton(self.load_root_main_frame, text='Next', font=("", 40),
+            self.load_root_load_button = ctk.CTkButton(self.load_root_main_frame, text='Load', font=("", 40),
                                                        fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                                       command=self.next, width=200)
-            self.load_root_next_button.pack(side="right", padx=70, pady=30)
+                                                       command=lambda: self.confirm("load"), width=200)
+            self.load_root_load_button.pack(side="left", padx=70, pady=30)
 
-    def show_new_load_saves_page(self):
-        pass
+            self.load_root_delete_button = ctk.CTkButton(self.load_root_main_frame, text='Delete', font=("", 40),
+                                                         fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                                         command=lambda: self.confirm("delete"), width=200)
+            self.load_root_delete_button.pack(side="right", padx=70, pady=30)
 
-    def previous(self):
-        pass
+    def save_mouse_wheel(self, event):
+        if self.load_root_saves_frame_2._parent_canvas.xview() != (0.0, 1.0):
+            self.load_root_saves_frame_2.parent_canvas.xview("scroll", -int(event.delta / 36), "units")
 
-    def next(self):
-        pass
+        return "break"
 
-    def load_board(self, folder_name):
-        with open(f"Saves\\{folder_name}\\{folder_name}.dat", "rb") as f:
-            new_board = pickle.load(f)
+    def show_load_saves_page(self):
+        try:
+            self.load_root_saves_frame_2.pack_forget()
 
+        except:
+            pass
+
+        self.load_root_saves_frame_2 = ctk.CTkScrollableFrame(self.load_root_saves_frame_1, fg_color="transparent",
+                                                              orientation="horizontal", width=700, height=300)
+        self.load_root_saves_frame_2._parent_canvas.configure(yscrollincrement=20, xscrollincrement=20)
+        self.load_root_saves_frame_2.bind("<MouseWheel>", self.save_mouse_wheel)
+        self.load_root_saves_frame_2.pack()
+
+        self.load_strvar = ctk.StringVar()
+        self.save_frame_list = []
+        self.save_image_list = []
+        self.save_image_label_list = []
+        self.save_radiobutton_list = []
+
+        for i, save in enumerate(self.list_of_saves):
+            save_frame = ctk.CTkFrame(self.load_root_saves_frame_2, fg_color="transparent")
+            self.save_frame_list.append(save_frame)
+            save_frame.bind("<Button-1>", lambda e, name=i: self.save_chosen_other(name))
+            save_frame.bind("<MouseWheel>", self.save_mouse_wheel)
+            save_frame.pack(side="left", padx=30 * (i % 2))
+
+            save_image = ctk.CTkImage(dark_image=Image.open(f"Saves\\{save}\\{save}.jpg"), size=(210, 210))
+            self.save_image_list.append(save_image)
+            save_image_label = ctk.CTkLabel(save_frame, text=None, image=save_image)
+            self.save_image_label_list.append(save_image_label)
+            save_image_label.bind("<Button-1>", lambda e, name=i: self.save_chosen_other(name))
+            save_image_label.bind("<MouseWheel>", self.save_mouse_wheel)
+            save_image_label.pack()
+
+            save_radiobutton = ctk.CTkRadioButton(save_frame, text=save, variable=self.load_strvar, value=save,
+                                                  command=self.save_chosen_radiobutton, font=("", 30),
+                                                  text_color=color_orange, hover_color=color_cyan_dark,
+                                                  fg_color=color_cyan, radiobutton_width=25, radiobutton_height=25,
+                                                  corner_radius=5)
+            self.save_radiobutton_list.append(save_radiobutton)
+            save_radiobutton.bind("<MouseWheel>", self.save_mouse_wheel)
+            save_radiobutton.pack(side="left", padx=5, pady=5)
+
+        self.load_folder_name = None
+
+    def save_chosen_other(self, name):
+        self.save_radiobutton_list[name].invoke()
+
+    def save_chosen_radiobutton(self):
+        self.load_folder_name = self.load_strvar.get()
+
+    def load_board(self):
         self.reset()
-        self.board = new_board
+        with open(f"Saves\\{self.load_folder_name}\\{self.load_folder_name}.dat", "rb") as f:
+            self.board = pickle.load(f)
+
         self.update_board()
         self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n"
                                                 f"Initial Balls: {self.board.count(1)}")
 
+    def delete_board(self):
+        os.remove(f"Saves\\{self.load_folder_name}\\{self.load_folder_name}.dat")
+        os.remove(f"Saves\\{self.load_folder_name}\\{self.load_folder_name}.jpg")
+        os.rmdir(f"Saves\\{self.load_folder_name}")
+        self.list_of_saves = humansorted(os.listdir("Saves"))
+        self.load_folder_name = None
+        self.show_load_saves_page()
+
     def load_exit(self):
         self.load_root_is_active = 0
         self.load_root.destroy()
+        self.load_folder_name = None
 
     def confirm(self, flavour):
-        self.confirm_root = ctk.CTkToplevel()
-        self.confirm_root.geometry("750x200")
-        self.confirm_root.after(201, lambda: self.confirm_root.iconbitmap(logo_path))
-        self.confirm_root.title("Confirm")
-        self.confirm_root.attributes("-topmost", True)
-        self.confirm_root.resizable(False, False)
-        self.confirm_root.grab_set()
+        if self.load_folder_name is not None or flavour not in ["load", "delete"]:
+            self.confirm_root = ctk.CTkToplevel()
+            self.confirm_root.geometry("750x200")
+            self.confirm_root.after(201, lambda: self.confirm_root.iconbitmap(logo_path))
+            self.confirm_root.title("Confirm")
+            self.confirm_root.attributes("-topmost", True)
+            self.confirm_root.resizable(False, False)
+            self.confirm_root.grab_set()
 
-        self.confirm_main_frame = ctk.CTkFrame(self.confirm_root, fg_color="transparent")
-        self.confirm_main_frame.pack()
+            self.confirm_main_frame = ctk.CTkFrame(self.confirm_root, fg_color="transparent")
+            self.confirm_main_frame.pack()
 
-        self.confirm_root_label = ctk.CTkLabel(self.confirm_main_frame, text="Are you sure you want to proceed",
-                                               font=("", 40), text_color=color_orange)
-        self.confirm_root_label.pack(pady=20)
+            self.confirm_root_label = ctk.CTkLabel(self.confirm_main_frame, text="Are you sure you want to proceed",
+                                                   font=("", 40), text_color=color_orange)
+            self.confirm_root_label.pack(pady=20)
 
-        self.confirm_root_yes_button = ctk.CTkButton(self.confirm_main_frame, text='Yes', font=("", 40),
-                                                     fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                                     command=lambda: self.confirm_root_yes_button_pressed(flavour))
-        self.confirm_root_yes_button.pack(side="left", padx=70, pady=25)
+            self.confirm_root_yes_button = ctk.CTkButton(self.confirm_main_frame, text='Yes', font=("", 40),
+                                                         fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                                         command=lambda: self.confirm_root_yes_button_pressed(flavour))
+            self.confirm_root_yes_button.pack(side="left", padx=70, pady=25)
 
-        self.confirm_root_no_button = ctk.CTkButton(self.confirm_main_frame, text='No', font=("", 40),
-                                                    fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
-                                                    command=self.confirm_root_no_button_pressed)
-        self.confirm_root_no_button.pack(side="right", padx=70, pady=25)
+            self.confirm_root_no_button = ctk.CTkButton(self.confirm_main_frame, text='No', font=("", 40),
+                                                        fg_color=self.color1_cyan, hover_color=self.color2_cyan_dark,
+                                                        command=self.confirm_root_no_button_pressed)
+            self.confirm_root_no_button.pack(side="right", padx=70, pady=25)
 
     def confirm_root_yes_button_pressed(self, flavour):
         self.confirm_root.destroy()
@@ -519,6 +578,12 @@ class App:
 
         elif flavour == "save":
             self.save()
+
+        elif flavour == "load":
+            self.load_board()
+
+        elif flavour == "delete":
+            self.delete_board()
 
     def confirm_root_no_button_pressed(self):
         self.confirm_root.destroy()
