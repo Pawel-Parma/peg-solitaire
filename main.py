@@ -13,21 +13,11 @@ import os
 
 
 # Optimize everything and widget creaction more in __init__ with
-# self.rules_root.state("withdrawn")
-# normal, iconic, withdrawn, or zoomed
-# root.winfo_viewable()
-# root.state()
 
-# Make save entry reset itself, and focus it
 # make repeating parts into methods
-
-# balls_counter_label
-
-# self.history = []
-# self.history_current_place = -1
-
-# self.confirm_flavour_strvar.set("load") or self.confirm("load")
-
+#   balls_counter_label
+#   self.history = [], self.history_current_place = -1
+#   self.confirm_flavour_strvar.set("load") or self.confirm("load")
 
 # Implement Board Solution
 
@@ -302,7 +292,22 @@ class App:
         self.load_root_delete_button.pack(side="right", padx=70, pady=30)
 
         # solution root
-        self.solution_root_is_active = 0
+        self.solution_root = ctk.CTkToplevel()
+        self.solution_root.title(title)
+        self.solution_root.after(201, lambda: self.solution_root.iconbitmap(logo_path))
+        self.solution_root.geometry(f"{750}x{380}-{0}+{0}")
+        self.solution_root.resizable(False, False)
+        self.solution_root.attributes('-topmost', True)
+        self.solution_root.protocol("WM_DELETE_WINDOW", self.solution_exit)
+
+        self.solution_main_frame = ctk.CTkFrame(self.solution_root, fg_color="transparent")
+        self.solution_main_frame.pack()
+        self.name_solution_label = ctk.CTkLabel(self.solution_main_frame, text="Solution",
+                                                text_color=color_orange, font=("", 60))
+        self.name_solution_label.pack()
+        self.solution_label = ctk.CTkLabel(self.solution_main_frame, text_color=color_cyan, font=("", 30),
+                                           text="")
+        self.solution_label.pack(pady=10)
 
     def square_pressed(self, y, x):
         if self.playing:
@@ -458,8 +463,9 @@ class App:
             self.save_exit()
 
     def all_exit(self):
-        exits = self.rules_exit, self.game_end_exit, self.confirm_exit, self.save_exit, self.load_exit
-        # , self.solution_exit)
+        exits = self.rules_exit, self.game_end_exit, self.confirm_exit, \
+                self.save_exit, self.load_exit, self.solution_exit
+
         for fun in exits:
             fun()
 
@@ -603,51 +609,21 @@ class App:
             self.delete_board()
 
     def solution(self):
-        if self.solution_root_is_active == 1:
-            self.solution_root.destroy()
-
-        self.solution_root_is_active = 1
-
-        self.solution_root = ctk.CTkToplevel()
-        self.solution_root.title(title)
-        self.solution_root.after(201, lambda: self.solution_root.iconbitmap(logo_path))
-        self.solution_root.attributes('-topmost', True)
-        self.solution_root.geometry(f"{750}x{380}-{0}+{0}")
-        self.solution_root.resizable(False, False)
-        self.solution_root.protocol("WM_DELETE_WINDOW", self.solution_exit)
-
-        self.solution_main_frame = ctk.CTkFrame(self.solution_root, fg_color="transparent")
-        self.solution_main_frame.pack()
-        self.name_solution_label = ctk.CTkLabel(self.solution_main_frame, text="Solution",
-                                                text_color=color_orange, font=("", 60))
-        self.name_solution_label.pack()
-
-        text = ""
         moves = list(enumerate(translate_moves(self.board.solution())))
+        size = 50
+        text = "None"
+
         if moves:
-            size = 50
-            for i, move in moves:
-                text += f"{i + 1}. {move}, "
-                if (i + 1) % 5 == 0:
-                    text += "\n"
+            size = 30
+            text = [f"{i + 1}. {move}, " + "\n" * ((i % 5 + 1) // 5) for i, move in moves]
+            text = "".join(text)
 
-        else:
-            size = 50
-            text = "None"
-
-        self.solution_label = ctk.CTkLabel(self.solution_main_frame, text_color=color_cyan, font=("", size),
-                                           text=text)
-        self.solution_label.pack(pady=10)
-
-        # if root.winfo_viewable() == 0:
-        #   root.state(normal)
-        #
-        # else:
-        #   root.state("withdrawn")
+        self.solution_label.configure(text=text, font=("", size))
+        self.solution_root.state("normal")
+        self.solution_root.lift()
 
     def solution_exit(self):
-        self.solution_root_is_active = 0
-        self.solution_root.destroy()
+        self.solution_root.state("withdrawn")
 
     def __solve_helper(self):
         self.inactivate_board()
