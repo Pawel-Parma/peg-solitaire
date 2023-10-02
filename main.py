@@ -18,8 +18,17 @@ import os
 # root.winfo_viewable()
 # root.state()
 
-# Make save entry reset itself
+# Make save entry reset itself, and focus it
 # make repeating parts into methods
+
+# balls_counter_label
+
+# self.history = []
+# self.history_current_place = -1
+
+# self.confirm_flavour_strvar.set("load") or self.confirm("load")
+
+
 # Implement Board Solution
 
 
@@ -164,7 +173,7 @@ class App:
         self.rules_root.geometry(f"{750}x{380}-{0}+{0}")
         self.rules_root.resizable(False, False)
         self.rules_root.attributes('-topmost', True)
-        self.rules_root.protocol("WM_DELETE_WINDOW", lambda: self.rules_root.state("withdrawn"))
+        self.rules_root.protocol("WM_DELETE_WINDOW", self.rules_exit)
 
         self.rules_main_frame = ctk.CTkFrame(self.rules_root, fg_color="transparent")
         self.rules_main_frame.pack()
@@ -192,7 +201,7 @@ class App:
         self.game_end_root.geometry(f"{550}x{180}-{0}+{0}")
         self.game_end_root.resizable(False, False)
         self.game_end_root.attributes('-topmost', True)
-        self.game_end_root.protocol("WM_DELETE_WINDOW", lambda: self.game_end_root.state("withdrawn"))
+        self.game_end_root.protocol("WM_DELETE_WINDOW", self.game_end_exit)
 
         self.game_end_main_frame = ctk.CTkFrame(self.game_end_root, fg_color="transparent")
         self.game_end_main_frame.pack()
@@ -212,8 +221,7 @@ class App:
         self.confirm_root.geometry("750x200")
         self.confirm_root.resizable(False, False)
         self.confirm_root.attributes("-topmost", True)
-        self.confirm_root.protocol("WM_DELETE_WINDOW", lambda: self.confirm_root.state("withdrawn") or
-                                   self.confirm_root.grab_release())
+        self.confirm_root.protocol("WM_DELETE_WINDOW", self.confirm_exit)
 
         self.confirm_main_frame = ctk.CTkFrame(self.confirm_root, fg_color="transparent")
         self.confirm_main_frame.pack()
@@ -227,8 +235,7 @@ class App:
         self.confirm_root_yes_button.pack(side="left", padx=70, pady=25)
         self.confirm_root_no_button = ctk.CTkButton(self.confirm_main_frame, text='No', font=("", 40),
                                                     fg_color=color_cyan, hover_color=color_cyan_dark,
-                                                    command=lambda: self.confirm_root.state("withdrawn") or
-                                                    self.confirm_root.grab_release())
+                                                    command=self.confirm_exit)
         self.confirm_root_no_button.pack(side="right", padx=70, pady=25)
 
         # save root
@@ -247,39 +254,55 @@ class App:
         self.dialog_root.geometry("640x280")
         self.dialog_root.resizable(False, False)
         self.dialog_root.attributes("-topmost", True)
-        self.dialog_root.protocol("WM_DELETE_WINDOW", lambda: self.dialog_root.state("withdrawn") or
-                                  self.dialog_root.grab_release())
+        self.dialog_root.protocol("WM_DELETE_WINDOW", self.save_exit)
 
         self.dialog_root_label = ctk.CTkLabel(self.dialog_root, text=self.save_text1, font=("", 40),
                                               text_color=color_orange)
         self.dialog_root_label.pack(pady=20)
         self.dialog_root_entry = ctk.CTkEntry(self.dialog_root, width=350, height=40)
         self.dialog_root_entry.pack()
-        self.dialog_root.after(150, lambda: self.dialog_root_entry.focus())
-        self.dialog_root_entry.select_present()
-
         self.dialog_root_ok_button = ctk.CTkButton(self.dialog_root, text='Ok', font=("", 40),
                                                    fg_color=color_cyan, hover_color=color_cyan_dark,
                                                    command=self.dialog_root_ok_button_pressed)
         self.dialog_root_ok_button.pack(side="left", padx=70, pady=25)
-
         self.dialog_root_cancel_button = ctk.CTkButton(self.dialog_root, text='Cancel', font=("", 40),
                                                        fg_color=color_cyan, hover_color=color_cyan_dark,
-                                                       command=lambda: self.dialog_root.state("withdrawn") or
-                                                       self.dialog_root.grab_release())
+                                                       command=self.save_exit)
         self.dialog_root_cancel_button.pack(side="right", padx=70, pady=25)
 
         # load root
-        self.load_root_is_active = 0
+        self.list_of_saves = []
+
+        self.load_root = ctk.CTkToplevel()
+        self.load_root.title(title)
+        self.load_root.after(201, lambda: self.load_root.iconbitmap(logo_path))
+        self.load_root.geometry(f"{800}x{550}-{0}+{0}")
+        self.load_root.resizable(False, False)
+        self.load_root.attributes('-topmost', True)
+        self.load_root.protocol("WM_DELETE_WINDOW", self.load_exit)
+
+        self.load_root_main_frame = ctk.CTkFrame(self.load_root, fg_color="transparent")
+        self.load_root_main_frame.pack()
+        self.load_root_label = ctk.CTkLabel(self.load_root_main_frame, text="Load saves", font=("", 60),
+                                            text_color=color_orange)
+        self.load_root_label.pack(pady=20)
+
+        self.load_root_saves_frame_1 = ctk.CTkFrame(self.load_root_main_frame, fg_color="transparent")
+        self.load_root_saves_frame_1.pack()
+        self.show_load_saves_page()
+        self.load_root_load_button = ctk.CTkButton(self.load_root_main_frame, text='Load', font=("", 40),
+                                                   fg_color=color_cyan, hover_color=color_cyan_dark, width=200,
+                                                   command=lambda: self.confirm_flavour_strvar.set("load") or
+                                                   self.confirm("load"))
+        self.load_root_load_button.pack(side="left", padx=70, pady=30)
+        self.load_root_delete_button = ctk.CTkButton(self.load_root_main_frame, text='Delete', font=("", 40),
+                                                     fg_color=color_cyan, hover_color=color_cyan_dark, width=200,
+                                                     command=lambda: self.confirm_flavour_strvar.set("delete") or
+                                                     self.confirm("delete"))
+        self.load_root_delete_button.pack(side="right", padx=70, pady=30)
 
         # solution root
         self.solution_root_is_active = 0
-
-        # if root.winfo_viewable() == 0:
-        #   root.state(normal)
-        #
-        # else:
-        #   root.state("withdrawn")
 
     def square_pressed(self, y, x):
         if self.playing:
@@ -363,13 +386,21 @@ class App:
 
         self.play()
         self.game_end_root.state("normal")
+        self.game_end_root.lift()
+
+    def game_end_exit(self):
+        self.game_end_root.state("withdrawn")
 
     def rules(self):
         if self.rules_root.winfo_viewable() == 0:
             self.rules_root.state("normal")
+            self.rules_root.lift()
 
         else:
-            self.rules_root.state("withdrawn")
+            self.rules_exit()
+
+    def rules_exit(self):
+        self.rules_root.state("withdrawn")
 
     def play(self):
         if self.playing:
@@ -385,7 +416,7 @@ class App:
         if self.playing:
             self.play()
 
-        self.game_end_root.state("withdrawn")
+        self.game_end_exit()
         self.board.reset_board()
         self.history = []
         self.history_current_place = -1
@@ -396,6 +427,14 @@ class App:
     def save(self):
         self.dialog_root.state("normal")
         self.dialog_root.grab_set()
+        self.dialog_root.lift()
+        self.dialog_root.after(150, lambda: self.dialog_root_entry.focus())
+        self.dialog_root_entry.select_present()
+        self.dialog_root_entry.delete(0, "end")
+
+    def save_exit(self):
+        self.dialog_root.state("withdrawn")
+        self.dialog_root.grab_release()
 
     def dialog_root_ok_button_pressed(self):
         self.save_dir_name = self.dialog_root_entry.get()
@@ -403,12 +442,11 @@ class App:
         if self.save_dir_name is not None:
             if self.is_text_legal(self.save_dir_name):
                 if self.save_dir_name not in os.listdir("Saves"):
-                    # self.all_exit()
+                    self.all_exit()
                     self.root.after(170, lambda: self.save_data(self.save_dir_name))
                     self.history_current_place = -1
                     self.history = []
-                    self.dialog_root.state("withdrawn")
-                    self.dialog_root.grab_release()
+                    self.save_exit()
 
                 else:
                     self.dialog_root_label.configure(text=self.save_text2)
@@ -417,18 +455,13 @@ class App:
                 self.dialog_root_label.configure(text=self.save_text3)
 
         else:
-            self.dialog_root.state("withdrawn")
-            self.dialog_root.grab_release()
+            self.save_exit()
 
     def all_exit(self):
-        exits = (self.rules_exit, self.win_exit, self.load_exit, self.solution_exit)
-
-        for exit_func in exits:
-            try:
-                exit_func()
-
-            except:
-                pass
+        exits = self.rules_exit, self.game_end_exit, self.confirm_exit, self.save_exit, self.load_exit
+        # , self.solution_exit)
+        for fun in exits:
+            fun()
 
     def is_text_legal(self, text):
         if len(text) > 0:
@@ -450,42 +483,15 @@ class App:
             pickle.dump(self.board, f)
 
     def load(self):
-        if self.load_root_is_active == 0:
+        if self.load_root.winfo_viewable() == 0:
+            self.load_root.state("normal")
+            self.load_root.lift()
             self.list_of_saves = humansorted(os.listdir("Saves"))
-            self.load_folder_name = "a"
-            self.current_load_save_page = 1
-
-            self.load_root_is_active = 1
-            self.load_root = ctk.CTkToplevel()
-            self.load_root.title(title)
-            self.load_root.after(201, lambda: self.load_root.iconbitmap(logo_path))
-            self.load_root.attributes('-topmost', True)
-            self.load_root.geometry(f"{800}x{550}-{0}+{0}")
-            self.load_root.resizable(False, False)
-            self.load_root.protocol("WM_DELETE_WINDOW", self.load_exit)
-
-            self.load_root_main_frame = ctk.CTkFrame(self.load_root, fg_color="transparent")
-            self.load_root_main_frame.pack()
-
-            self.load_root_label = ctk.CTkLabel(self.load_root_main_frame, text="Load saves", font=("", 60),
-                                                text_color=color_orange)
-            self.load_root_label.pack(pady=20)
-
-            self.load_root_saves_frame_1 = ctk.CTkFrame(self.load_root_main_frame, fg_color="transparent")
-            self.load_root_saves_frame_1.pack()
+            self.load_folder_name = ""
             self.show_load_saves_page()
 
-            self.load_root_load_button = ctk.CTkButton(self.load_root_main_frame, text='Load', font=("", 40),
-                                                       fg_color=color_cyan, hover_color=color_cyan_dark, width=200,
-                                                       command=lambda: self.confirm_flavour_strvar.set("load") or
-                                                       self.confirm("load"))
-            self.load_root_load_button.pack(side="left", padx=70, pady=30)
-
-            self.load_root_delete_button = ctk.CTkButton(self.load_root_main_frame, text='Delete', font=("", 40),
-                                                         fg_color=color_cyan, hover_color=color_cyan_dark, width=200,
-                                                         command=lambda: self.confirm_flavour_strvar.set("delete") or
-                                                         self.confirm("delete"))
-            self.load_root_delete_button.pack(side="right", padx=70, pady=30)
+        else:
+            self.load_root.state("withdrawn")
 
     def save_mouse_wheel(self, event):
         if self.load_root_saves_frame_2._parent_canvas.xview() != (0.0, 1.0):
@@ -562,17 +568,21 @@ class App:
         self.show_load_saves_page()
 
     def load_exit(self):
-        self.load_root_is_active = 0
-        self.load_root.destroy()
+        self.load_root.state("withdrawn")
         self.load_folder_name = None
 
     def confirm(self, flavour):
         if self.load_folder_name is not None or flavour not in ["load", "delete"]:
             self.confirm_root.state("normal")
             self.confirm_root.grab_set()
+            self.confirm_root.lift()
+
+    def confirm_exit(self):
+        self.confirm_root.state("withdrawn")
+        self.confirm_root.grab_release()
 
     def confirm_root_yes_button_pressed(self):
-        self.confirm_root.state("withdrawn")
+        self.confirm_exit()
 
         if self.confirm_flavour_strvar.get() == "solution":
             self.solution()
@@ -597,6 +607,7 @@ class App:
             self.solution_root.destroy()
 
         self.solution_root_is_active = 1
+
         self.solution_root = ctk.CTkToplevel()
         self.solution_root.title(title)
         self.solution_root.after(201, lambda: self.solution_root.iconbitmap(logo_path))
@@ -607,7 +618,6 @@ class App:
 
         self.solution_main_frame = ctk.CTkFrame(self.solution_root, fg_color="transparent")
         self.solution_main_frame.pack()
-
         self.name_solution_label = ctk.CTkLabel(self.solution_main_frame, text="Solution",
                                                 text_color=color_orange, font=("", 60))
         self.name_solution_label.pack()
@@ -615,7 +625,7 @@ class App:
         text = ""
         moves = list(enumerate(translate_moves(self.board.solution())))
         if moves:
-            size = 30
+            size = 50
             for i, move in moves:
                 text += f"{i + 1}. {move}, "
                 if (i + 1) % 5 == 0:
@@ -652,14 +662,7 @@ class App:
                                                     self.balls_counter_label.cget('text')
                                                     [len(f"Current Balls: {self.board.count(1)}\n") + b:])
 
-        self.solve_button.configure(state="enabled")
-        self.play_setpos_button.configure(state="enabled")
-        self.reset_pos_button.configure(state="enabled")
-        self.save_button.configure(state="enabled")
-        self.load_button.configure(state="enabled")
-        self.solution_button.configure(state="enabled")
-        self.undo_button.configure(state="enabled")
-        self.redo_button.configure(state="enabled")
+        self.buttons_on_off("enabled")
         self.root.bind("<Control-y>", lambda e: self.redo())
         self.root.bind("<Control-z>", lambda e: self.undo())
         self.play()
@@ -667,19 +670,22 @@ class App:
         self.game_end()
 
     def solve(self):
-        self.solve_button.configure(state="disabled")
-        self.play_setpos_button.configure(state="disabled")
-        self.reset_pos_button.configure(state="disabled")
-        self.save_button.configure(state="disabled")
-        self.load_button.configure(state="disabled")
-        self.solution_button.configure(state="disabled")
-        self.undo_button.configure(state="disabled")
-        self.redo_button.configure(state="disabled")
+        self.buttons_on_off("disabled")
         self.root.bind("<Control-y>", lambda e: 1 == 1)
         self.root.bind("<Control-z>", lambda e: 1 == 1)
         self.board_solution = self.board.solution()
         thread = th.Thread(name="Solve_Thread", target=self.__solve_helper)
         thread.start()
+
+    def buttons_on_off(self, state):
+        self.solve_button.configure(state=state)
+        self.play_setpos_button.configure(state=state)
+        self.reset_pos_button.configure(state=state)
+        self.save_button.configure(state=state)
+        self.load_button.configure(state=state)
+        self.solution_button.configure(state=state)
+        self.undo_button.configure(state=state)
+        self.redo_button.configure(state=state)
 
     def history_tracker(self, state, action):
         if self.history_current_place == len(self.history) - 1:
@@ -771,14 +777,8 @@ class App:
         thread = th.Thread(name="Redo_Thread", target=self.__redo_helper)
         thread.start()
 
-    def withdraw(self):
-        self.rules_root.state("withdrawn")
-        self.game_end_root.state("withdrawn")
-        self.confirm_root.state("withdrawn")
-        self.dialog_root.state("withdrawn")
-
     def run(self):
-        self.root.after(201, self.withdraw)
+        self.root.after(301, self.all_exit)
         self.root.mainloop()
 
 
