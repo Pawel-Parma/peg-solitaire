@@ -12,13 +12,6 @@ import pickle
 import os
 
 
-# Optimize everything and widget creaction more in __init__ with
-
-# make repeating parts into methods
-#   balls_counter_label
-#   self.history = [], self.history_current_place = -1
-#   self.confirm_flavour_strvar.set("load") or self.confirm("load")
-
 # Implement Board Solution
 
 
@@ -33,11 +26,11 @@ class App:
         self.move, self.history = [], []
 
         self.root = ctk.CTk()
-        ctk.set_appearance_mode("dark")
         self.root.title(title)
         self.root.iconbitmap(logo_path)
         self.root.geometry(f"{width}x{height}-{0}+{0}")
         self.root.minsize(width, height)
+        ctk.set_appearance_mode("dark")
 
         self.placed_image = ctk.CTkImage(dark_image=Image.open(placed_image_path), size=game_image_size)
         self.blank_image = ctk.CTkImage(dark_image=Image.open(blank_image_path), size=game_image_size)
@@ -107,16 +100,14 @@ class App:
         self.play_setpos_button.pack(side="left", pady=5)
         self.reset_pos_button = ctk.CTkButton(self.right_buttons_1_widgets_frame, text='Reset', font=("", 40),
                                               fg_color=color_cyan, hover_color=color_cyan_dark,
-                                              command=lambda: self.confirm_flavour_strvar.set("reset") or
-                                              self.confirm("reset"))
+                                              command=lambda: self.confirm("reset"))
         self.reset_pos_button.pack(side="left", padx=10, pady=5)
 
         self.right_buttons_2_widgets_frame = ctk.CTkFrame(self.action_frame, fg_color='transparent')
         self.right_buttons_2_widgets_frame.pack()
         self.save_button = ctk.CTkButton(self.right_buttons_2_widgets_frame, text='Save', font=("", 40),
                                          fg_color=color_cyan, hover_color=color_cyan_dark, width=240,
-                                         command=lambda: self.confirm_flavour_strvar.set("save") or
-                                         self.confirm("save"))
+                                         command=lambda: self.confirm("save"))
         self.save_button.pack(side="left", pady=5)
         self.load_button = ctk.CTkButton(self.right_buttons_2_widgets_frame, text='Load', font=("", 40),
                                          fg_color=color_cyan, hover_color=color_cyan_dark,
@@ -127,13 +118,11 @@ class App:
         self.right_buttons_3_widgets_frame.pack()
         self.solution_button = ctk.CTkButton(self.right_buttons_3_widgets_frame, text='Sollution', font=("", 40),
                                              fg_color=color_cyan, hover_color=color_cyan_dark, width=240,
-                                             command=lambda: self.confirm_flavour_strvar.set("solution") or
-                                             self.confirm("solution"))
+                                             command=lambda: self.confirm("solution"))
         self.solution_button.pack(side="left", pady=5)
         self.solve_button = ctk.CTkButton(self.right_buttons_3_widgets_frame, text='Solve', font=("", 40),
                                           fg_color=color_cyan, hover_color=color_cyan_dark,
-                                          command=lambda: self.confirm_flavour_strvar.set("solve") or
-                                          self.confirm("solve"))
+                                          command=lambda: self.confirm("solve"))
         self.solve_button.pack(side="left", padx=10, pady=5)
 
         self.right_buttons_4_widgets_frame = ctk.CTkFrame(self.action_frame, fg_color='transparent')
@@ -261,6 +250,7 @@ class App:
         self.dialog_root_cancel_button.pack(side="right", padx=70, pady=25)
 
         # load root
+        self.load_strvar = ctk.StringVar()
         self.list_of_saves = []
 
         self.load_root = ctk.CTkToplevel()
@@ -282,13 +272,11 @@ class App:
         self.show_load_saves_page()
         self.load_root_load_button = ctk.CTkButton(self.load_root_main_frame, text='Load', font=("", 40),
                                                    fg_color=color_cyan, hover_color=color_cyan_dark, width=200,
-                                                   command=lambda: self.confirm_flavour_strvar.set("load") or
-                                                   self.confirm("load"))
+                                                   command=lambda: self.confirm("load"))
         self.load_root_load_button.pack(side="left", padx=70, pady=30)
         self.load_root_delete_button = ctk.CTkButton(self.load_root_main_frame, text='Delete', font=("", 40),
                                                      fg_color=color_cyan, hover_color=color_cyan_dark, width=200,
-                                                     command=lambda: self.confirm_flavour_strvar.set("delete") or
-                                                     self.confirm("delete"))
+                                                     command=lambda: self.confirm("delete"))
         self.load_root_delete_button.pack(side="right", padx=70, pady=30)
 
         # solution root
@@ -334,15 +322,11 @@ class App:
                             self.picked_pieces[i][j] = 0
 
                 self.move = []
-                b = 1 if self.board.count(1) == 9 else 0
-                self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n" +
-                                                        self.balls_counter_label.cget('text')
-                                                        [len(f"Current Balls: {self.board.count(1)}\n") + b:])
+                self.balls_counter_update(2)
 
         else:
             self.board.interact(y, x)
-            self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n"
-                                                    f"Initial Balls: {self.board.count(1)}")
+            self.balls_counter_update(1)
             self.history_tracker("interact", (y, x))
 
         self.update_board()
@@ -396,6 +380,22 @@ class App:
     def game_end_exit(self):
         self.game_end_root.state("withdrawn")
 
+    def balls_counter_update(self, state):
+        if state == 1:
+            self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n"
+                                                    f"Initial Balls: {self.board.count(1)}")
+            return
+
+        if state == 2:
+            b = 1 if self.board.count(1) == 9 else 0
+
+        elif state == 3:
+            b = -1 if self.board.count(1) == 10 else 0
+
+        self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n" +
+                                                self.balls_counter_label.cget('text')
+                                                [len(f"Current Balls: {self.board.count(1)}\n") + b:])
+
     def rules(self):
         if self.rules_root.winfo_viewable() == 0:
             self.rules_root.state("normal")
@@ -423,11 +423,9 @@ class App:
 
         self.game_end_exit()
         self.board.reset_board()
-        self.history = []
-        self.history_current_place = -1
+        self.history, self.history_current_place = [], -1
         self.update_board()
-        self.balls_counter_label.configure(text="Current Balls: 0\n"
-                                                "Initial Balls: 0")
+        self.balls_counter_update(1)
 
     def save(self):
         self.dialog_root.state("normal")
@@ -449,8 +447,7 @@ class App:
                 if self.save_dir_name not in os.listdir("Saves"):
                     self.all_exit()
                     self.root.after(170, lambda: self.save_data(self.save_dir_name))
-                    self.history_current_place = -1
-                    self.history = []
+                    self.history, self.history_current_place = [], -1
                     self.save_exit()
 
                 else:
@@ -518,27 +515,19 @@ class App:
         self.load_root_saves_frame_2.bind("<MouseWheel>", self.save_mouse_wheel)
         self.load_root_saves_frame_2.pack()
 
-        self.load_strvar = ctk.StringVar()
-        self.save_frame_list = []
-        self.save_image_list = []
-        self.save_image_label_list = []
+        self.load_strvar.set(None)
         self.save_radiobutton_list = []
 
         for i, save in enumerate(self.list_of_saves):
             save_frame = ctk.CTkFrame(self.load_root_saves_frame_2, fg_color="transparent")
-            self.save_frame_list.append(save_frame)
             save_frame.bind("<Button-1>", lambda e, name=i: self.save_chosen_other(name))
             save_frame.bind("<MouseWheel>", self.save_mouse_wheel)
             save_frame.pack(side="left", padx=30 * (i % 2))
-
             save_image = ctk.CTkImage(dark_image=Image.open(f"Saves\\{save}\\{save}.jpg"), size=(210, 210))
-            self.save_image_list.append(save_image)
             save_image_label = ctk.CTkLabel(save_frame, text=None, image=save_image)
-            self.save_image_label_list.append(save_image_label)
             save_image_label.bind("<Button-1>", lambda e, name=i: self.save_chosen_other(name))
             save_image_label.bind("<MouseWheel>", self.save_mouse_wheel)
             save_image_label.pack()
-
             save_radiobutton = ctk.CTkRadioButton(save_frame, text=save, variable=self.load_strvar, value=save,
                                                   command=self.save_chosen_radiobutton, font=("", 30),
                                                   text_color=color_orange, hover_color=color_cyan_dark,
@@ -562,8 +551,7 @@ class App:
             self.board = pickle.load(f)
 
         self.update_board()
-        self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n"
-                                                f"Initial Balls: {self.board.count(1)}")
+        self.balls_counter_update(1)
 
     def delete_board(self):
         os.remove(f"Saves\\{self.load_folder_name}\\{self.load_folder_name}.dat")
@@ -579,6 +567,7 @@ class App:
 
     def confirm(self, flavour):
         if self.load_folder_name is not None or flavour not in ["load", "delete"]:
+            self.confirm_flavour_strvar.set(flavour)
             self.confirm_root.state("normal")
             self.confirm_root.grab_set()
             self.confirm_root.lift()
@@ -626,17 +615,12 @@ class App:
         self.solution_root.state("withdrawn")
 
     def __solve_helper(self):
-        self.inactivate_board()
-
         for move in self.board_solution:
             t.sleep(1)
             self.board.move(move)
             self.history_tracker("move", move)
             self.update_board()
-            b = 1 if self.board.count(1) == 9 else 0
-            self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n" +
-                                                    self.balls_counter_label.cget('text')
-                                                    [len(f"Current Balls: {self.board.count(1)}\n") + b:])
+            self.balls_counter_update(2)
 
         self.buttons_on_off("enabled")
         self.root.bind("<Control-y>", lambda e: self.redo())
@@ -646,10 +630,12 @@ class App:
         self.game_end()
 
     def solve(self):
+        self.inactivate_board()
         self.buttons_on_off("disabled")
         self.root.bind("<Control-y>", lambda e: 1 == 1)
         self.root.bind("<Control-z>", lambda e: 1 == 1)
         self.board_solution = self.board.solution()
+
         thread = th.Thread(name="Solve_Thread", target=self.__solve_helper)
         thread.start()
 
@@ -693,8 +679,7 @@ class App:
                     y, x = self.history[self.history_current_place][1]
                     self.board.interact(y, x)
                     self.history_current_place -= 1
-                    self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n"
-                                                            f"Initial Balls: {self.board.count(1)}")
+                    self.balls_counter_update(1)
 
             elif self.history[self.history_current_place][0] == "M":
                 move = self.history[self.history_current_place][1]
@@ -704,14 +689,10 @@ class App:
                 self.board.interact(y2, x2)
                 self.history_current_place -= 1
                 if self.playing == 1:
-                    b = 1 if self.board.count(1) == 10 else 0
-                    self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n" +
-                                                            self.balls_counter_label.cget('text')
-                                                            [len(f"Current Balls: {self.board.count(1)}\n") - b:])
+                    self.balls_counter_update(3)
 
                 else:
-                    self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n"
-                                                            f"Initial Balls: {self.board.count(1)}")
+                    self.balls_counter_update(1)
 
             self.update_board()
 
@@ -728,22 +709,17 @@ class App:
                     y, x = self.history[self.history_current_place + 1][1]
                     self.board.interact(y, x)
                     self.history_current_place += 1
-                    self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n"
-                                                            f"Initial Balls: {self.board.count(1)}")
+                    self.balls_counter_update(1)
 
             elif self.history[self.history_current_place + 1][0] == "M":
                 move = self.history[self.history_current_place + 1][1]
                 self.board.move(move)
                 self.history_current_place += 1
                 if self.playing == 1:
-                    b = 1 if self.board.count(1) == 9 else 0
-                    self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n" +
-                                                            self.balls_counter_label.cget('text')
-                                                            [len(f"Current Balls: {self.board.count(1)}\n") + b:])
+                    self.balls_counter_update(2)
 
                 else:
-                    self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n"
-                                                            f"Initial Balls: {self.board.count(1)}")
+                    self.balls_counter_update(1)
 
             self.update_board()
 
