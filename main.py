@@ -227,6 +227,12 @@ class App:
                           "Type in another file name"
         self.save_dir_name = ""
 
+        try:
+            os.mkdir("Saves")
+
+        except:
+            pass
+
         self.dialog_root = ctk.CTkToplevel()
         self.dialog_root.title(title)
         self.dialog_root.after(201, lambda: self.dialog_root.iconbitmap(logo_path))
