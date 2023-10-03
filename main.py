@@ -742,5 +742,3 @@ class App:
 
 app = App()
 app.run()
-
-# 770

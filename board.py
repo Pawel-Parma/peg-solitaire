@@ -136,18 +136,51 @@ class Board:
 
         return solution
 
-    def solution(self):
-        self.skip = 0
-        self.solved = 0
-        solution = []
+    def __solution(self, board_object=None, board_level=None):
+        if board_object is None:
+            self.solution_list = []
+            board_object = self
+            self.skip = 0
+            self.solved = 0
+            self.pwm = 0
+            board_level = 1
 
-        self.__solution_helper(self, 1, solution)
+        elif self.skip == 1:
+            return self.solution_list
+
+        for i, move in enumerate(board_object.legal_moves()):
+            new_board_object = Board(board_object.as_list())
+            new_board_object.move(move)
+            self.solution_list.append(move)
+            self.pwm += 1
+
+            if new_board_object.is_won() == 1:
+                self.pwm = 0
+                self.skip = self.solved = 1
+                return self.solution_list
+
+            if new_board_object.is_end() == 1:
+                self.solution_list.pop(-1)
+
+            else:
+                self.__solution(new_board_object, board_level + 1)
+
         return self.solution_list
 
     def solve(self):
         solution = self.solution_list if self.solved == 1 else self.solution()
         for i in solution:
             self.move(i)
+
+    def solution(self):
+        # #self.skip = 0
+        # self.solved = 0
+        # solution = []
+        #
+        # self.__solution_helper(self, 1, solution)
+        self.__solution()
+
+        return self.solution_list
 
     def __str__(self):
         ret = "\n   A B C D E F G \n"
