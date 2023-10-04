@@ -604,7 +604,9 @@ class App:
             self.delete_board()
 
     def solution(self):
+        # s = t.perf_counter()
         moves = list(enumerate(translate_moves(self.board.solution())))
+        # print(t.perf_counter() - s)
         size = 50
         text = "None"
 
@@ -622,7 +624,7 @@ class App:
 
     def __solve_helper(self):
         for move in self.board_solution:
-            t.sleep(1)
+            # t.sleep(1)
             self.board.move(move)
             self.history_tracker("move", move)
             self.update_board()

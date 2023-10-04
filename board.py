@@ -33,6 +33,7 @@ class Board:
 
         self.size = 7
         self.solution_list = []
+        self.solution_list_helper = []
         self.skip = 0
         self.solved = 0
 
@@ -113,57 +114,34 @@ class Board:
 
         return 0
 
-    def __solution_helper(self, board_object, board_level, solution):
-        if self.skip == 1:
-            return solution
+    def __solution(self, board_object):
+        # Implement saving done boards and then rotating new ones so if one of them is in done board then pass doing it
 
-        for i, move in enumerate(board_object.legal_moves()):
+        if self.solved:
+            return
+
+        for move in board_object.legal_moves():
             new_board_object = Board(board_object.as_list())
             new_board_object.move(move)
-            solution.append(move)
-
-            if new_board_object.is_won():
-                self.skip = self.solved = 1
-                self.solution_list = copy.deepcopy(solution)
-                return solution
-
-            elif new_board_object.is_end():
-                if len(self.solution_list) != 0:
-                    self.solution_list.pop(-1)
-
-            else:
-                self.__solution_helper(new_board_object, board_level + 1, solution)
-
-        return solution
-
-    def __solution(self, board_object=None, board_level=None):
-        if board_object is None:
-            self.solution_list = []
-            board_object = self
-            self.skip = 0
-            self.solved = 0
-            self.pwm = 0
-            board_level = 1
-
-        elif self.skip == 1:
-            return self.solution_list
-
-        for i, move in enumerate(board_object.legal_moves()):
-            new_board_object = Board(board_object.as_list())
-            new_board_object.move(move)
-            self.solution_list.append(move)
-            self.pwm += 1
+            self.solution_list_helper.append(move)
 
             if new_board_object.is_won() == 1:
-                self.pwm = 0
-                self.skip = self.solved = 1
-                return self.solution_list
+                self.solved = 1
+                self.solution_list = self.solution_list_helper.copy()
 
-            if new_board_object.is_end() == 1:
-                self.solution_list.pop(-1)
+                return
 
-            else:
-                self.__solution(new_board_object, board_level + 1)
+            self.__solution(new_board_object)
+            self.solution_list_helper.pop(-1)
+
+        return
+
+    def solution(self):
+        if self.solved == 0:
+            self.solution_list = []
+            self.solution_list_helper = []
+
+            self.__solution(self)
 
         return self.solution_list
 
@@ -171,16 +149,6 @@ class Board:
         solution = self.solution_list if self.solved == 1 else self.solution()
         for i in solution:
             self.move(i)
-
-    def solution(self):
-        # #self.skip = 0
-        # self.solved = 0
-        # solution = []
-        #
-        # self.__solution_helper(self, 1, solution)
-        self.__solution()
-
-        return self.solution_list
 
     def __str__(self):
         ret = "\n   A B C D E F G \n"
@@ -216,14 +184,14 @@ class Board:
 
     def __getitem__(self, item):
         if type(item) == tuple:
-            y, x = item
-            return self.board[y][x]
+            if len(item) == 2:
+                y, x = item
+                return self.board[y][x]
 
         elif type(item) == int:
             return self.board[item]
 
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
 
 def process_move(move):
