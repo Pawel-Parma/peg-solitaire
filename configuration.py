@@ -1,13 +1,13 @@
-color_cyan = "#2dc4a4"
-color_cyan_dark = "#2aad91"
-color_orange = "#FF9D00"
+COLOR_CYAN = "#2dc4a4"
+COLOR_CYAN_DARK = "#2aad91"
+COLOR_ORANGE = "#FF9D00"
 
-title = "Peg Solitaire"
-logo_path = r"Images\Logo.ico"
-width = 1200
-height = 750
+TITLE = "Peg Solitaire"
+LOGO_PATH = r"Images\Logo.ico"
+WIDTH = 1200
+HEIGHT = 750
 
-game_image_size = (70, 70)
-blank_image_path = r"Images\Blank.png"
-placed_image_path = r"Images\Placed.png"
-picked_image_path = r"Images\Picked.png"
+GAME_IMAGE_SIZE = (70, 70)
+BLANK_IMAGE_PATH = r"Images\Blank.png"
+PLACED_IMAGE_PATH = r"Images\Placed.png"
+PICKED_IMAGE_PATH = r"Images\Picked.png"

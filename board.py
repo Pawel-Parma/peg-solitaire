@@ -1,6 +1,3 @@
-import copy
-
-
 class BoardIterator:
     def __init__(self, board_object):
         self.board = board_object.board
@@ -32,10 +29,10 @@ class Board:
             self.board = board
 
         self.size = 7
+        self.skip = self.solved = 0
         self.solution_list = []
         self.solution_list_helper = []
-        self.skip = 0
-        self.solved = 0
+        self.done_boards = set()
 
     def interact(self, y, x):
         self.solved = 0
@@ -115,10 +112,16 @@ class Board:
         return 0
 
     def __solution(self, board_object):
-        # Implement saving done boards and then rotating new ones so if one of them is in done board then pass doing it
+        board_object_tuple = board_object.as_tuple()
 
-        if self.solved:
+        if self.solved or board_object_tuple in self.done_boards:
             return
+
+        self.done_boards.add(board_object_tuple)
+
+        for _ in range(3):
+            board_object_tuple = rotate_2d_list_right(board_object_tuple)
+            self.done_boards.add(board_object_tuple)
 
         for move in board_object.legal_moves():
             new_board_object = Board(board_object.as_list())
@@ -140,6 +143,7 @@ class Board:
         if self.solved == 0:
             self.solution_list = []
             self.solution_list_helper = []
+            self.done_boards = set()
 
             self.__solution(self)
 
@@ -176,6 +180,24 @@ class Board:
     def as_dict(self):
         return {(y, x): self.board[y][x] for y in range(7) for x in range(7)}
 
+    def as_tuple(self):
+        return tuple(tuple(int(x) for x in y) for y in self.board)
+
+    def lightweight_serialize(self):
+        """
+        Call it before serializing to make the serialized file lighter
+        Or don't if you want to have solution saved
+
+        :return: self
+        """
+
+        self.skip = self.solved = 0
+        self.solution_list = []
+        self.solution_list_helper = []
+        self.done_boards = set()
+
+        return self
+
     def __repr__(self):
         return self.__str__()
 
@@ -183,12 +205,12 @@ class Board:
         return BoardIterator(self)
 
     def __getitem__(self, item):
-        if type(item) == tuple:
+        if isinstance(item, tuple):
             if len(item) == 2:
                 y, x = item
                 return self.board[y][x]
 
-        elif type(item) == int:
+        elif isinstance(item, int):
             return self.board[item]
 
         raise NotImplementedError
@@ -217,3 +239,7 @@ def translate_move(move):
 def translate_moves(moves):
     for move in moves:
         yield translate_move(move)
+
+
+def rotate_2d_list_right(list_2d):
+    return tuple(zip(*list_2d[::-1]))

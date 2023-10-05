@@ -1,15 +1,17 @@
 # Dependencies: natsort, customtkinter, pillow, pyautogui
 
-from natsort import humansorted
-from configuration import *
-import customtkinter as ctk
-import threading as th
-from PIL import Image
-from board import *
-import pyautogui
-import time as t
 import pickle
 import os
+import threading as th
+import time as t
+
+from natsort import humansorted
+import customtkinter as ctk
+from PIL import Image
+import pyautogui
+
+from configuration import *
+from board import *
 
 
 # Implement Board Solution
@@ -24,22 +26,23 @@ class App:
         self.board_label_list = [[0] * self.board.size for _ in range(self.board.size)]
         self.playing, self.history_current_place = 0, -1
         self.move, self.history = [], []
+        self.board_solution = []
 
         self.root = ctk.CTk()
-        self.root.title(title)
-        self.root.iconbitmap(logo_path)
-        self.root.geometry(f"{width}x{height}-{0}+{0}")
-        self.root.minsize(width, height)
+        self.root.title(TITLE)
+        self.root.iconbitmap(LOGO_PATH)
+        self.root.geometry(f"{WIDTH}x{HEIGHT}-{0}+{0}")
+        self.root.minsize(WIDTH, HEIGHT)
         ctk.set_appearance_mode("dark")
 
-        self.placed_image = ctk.CTkImage(dark_image=Image.open(placed_image_path), size=game_image_size)
-        self.blank_image = ctk.CTkImage(dark_image=Image.open(blank_image_path), size=game_image_size)
-        self.picked_image = ctk.CTkImage(dark_image=Image.open(picked_image_path), size=game_image_size)
+        self.placed_image = ctk.CTkImage(dark_image=Image.open(PLACED_IMAGE_PATH), size=GAME_IMAGE_SIZE)
+        self.blank_image = ctk.CTkImage(dark_image=Image.open(BLANK_IMAGE_PATH), size=GAME_IMAGE_SIZE)
+        self.picked_image = ctk.CTkImage(dark_image=Image.open(PICKED_IMAGE_PATH), size=GAME_IMAGE_SIZE)
 
         self.main_frame = ctk.CTkFrame(self.root, fg_color='transparent')
         self.main_frame.pack()
-        self.name_label = ctk.CTkLabel(self.main_frame, text=title, font=("Comic Sans", 60),
-                                       text_color=color_orange)
+        self.name_label = ctk.CTkLabel(self.main_frame, text=TITLE, font=("Comic Sans", 60),
+                                       text_color=COLOR_ORANGE)
         self.name_label.pack(pady=10)
 
         self.game_frame = ctk.CTkFrame(self.main_frame, fg_color='transparent')
@@ -49,45 +52,45 @@ class App:
             for k in range(self.board.size + 2):
                 if 0 < j < 8:
                     board_place_part_frame = ctk.CTkFrame(self.game_frame, corner_radius=0,
-                                                          fg_color=color_cyan, border_width=20,
-                                                          border_color=color_cyan_dark, width=100, height=40)
+                                                          fg_color=COLOR_CYAN, border_width=20,
+                                                          border_color=COLOR_CYAN_DARK, width=100, height=40)
                     board_place_part_frame.grid(column=j + 1, row=k)
 
                     board_place_part_label = ctk.CTkLabel(board_place_part_frame, text=f"{chr(65 + j - 1)}",
-                                                          font=("", 30), width=game_image_size[0], height=40)
+                                                          font=("", 30), width=GAME_IMAGE_SIZE[0], height=40)
                     board_place_part_label.pack(pady=3, padx=3)
 
                 else:
                     board_place_part_frame = ctk.CTkFrame(self.game_frame, corner_radius=0,
-                                                          fg_color=color_cyan, border_width=20,
-                                                          border_color=color_cyan_dark, width=100, height=40)
+                                                          fg_color=COLOR_CYAN, border_width=20,
+                                                          border_color=COLOR_CYAN_DARK, width=100, height=40)
                     board_place_part_frame.grid(column=j + 1, row=k)
 
                     board_place_part_label = ctk.CTkLabel(board_place_part_frame, text=f"{8 - k}"
-                    if not (k == 0 or k == 8) else "", font=("", 30),
-                                                          width=40 if j == 0 or j == 8 else game_image_size[0],
-                                                          height=40 if k == 0 or k == 8 else game_image_size[1])
+                    if not (k in (0, 8)) else "", font=("", 30),
+                                                          width=40 if j in (0, 8) else GAME_IMAGE_SIZE[0],
+                                                          height=40 if k in (0, 8) else GAME_IMAGE_SIZE[1])
                     board_place_part_label.pack(pady=3, padx=3)
 
-        for i, v1 in enumerate(self.board):
-            for j, v2 in enumerate(v1):
-                board_frame_part = ctk.CTkFrame(self.game_frame, corner_radius=0, fg_color=color_cyan,
-                                                border_width=10, border_color=color_cyan_dark,
+        for i in range(7):
+            for j in range(7):
+                board_frame_part = ctk.CTkFrame(self.game_frame, corner_radius=0, fg_color=COLOR_CYAN,
+                                                border_width=10, border_color=COLOR_CYAN_DARK,
                                                 width=100, height=100)
                 board_frame_part.bind("<Button-1>", lambda e, y=i, x=j: self.square_pressed(y, x))
                 self.board_frame_list[i][j] = board_frame_part
                 board_frame_part.grid(column=j + 2, row=i + 1)
 
-                board_label_part = ctk.CTkLabel(board_frame_part, text="", width=game_image_size[0],
-                                                height=game_image_size[1])
+                board_label_part = ctk.CTkLabel(board_frame_part, text="", width=GAME_IMAGE_SIZE[0],
+                                                height=GAME_IMAGE_SIZE[1])
                 board_label_part.bind("<Button-1>", lambda e, y=i, x=j: self.square_pressed(y, x))
                 self.board_label_list[i][j] = board_label_part
                 board_label_part.pack(pady=3, padx=3)
 
         self.update_board()
 
-        self.rules_button = ctk.CTkButton(self.main_frame, text='Rules', font=("", 40), fg_color=color_cyan,
-                                          hover_color=color_cyan_dark, command=self.rules)
+        self.rules_button = ctk.CTkButton(self.main_frame, text='Rules', font=("", 40), fg_color=COLOR_CYAN,
+                                          hover_color=COLOR_CYAN_DARK, command=self.rules)
         self.rules_button.place(y=20, x=0)
         self.action_frame = ctk.CTkFrame(self.main_frame, fg_color='transparent')
         self.action_frame.pack(side="left", padx=10, pady=10, fill="y")
@@ -95,45 +98,45 @@ class App:
         self.right_buttons_1_widgets_frame = ctk.CTkFrame(self.action_frame, fg_color='transparent')
         self.right_buttons_1_widgets_frame.pack()
         self.play_setpos_button = ctk.CTkButton(self.right_buttons_1_widgets_frame, text='Play', font=("", 40),
-                                                fg_color=color_cyan,
-                                                hover_color=color_cyan_dark, command=self.play, width=240)
+                                                fg_color=COLOR_CYAN,
+                                                hover_color=COLOR_CYAN_DARK, command=self.play, width=240)
         self.play_setpos_button.pack(side="left", pady=5)
         self.reset_pos_button = ctk.CTkButton(self.right_buttons_1_widgets_frame, text='Reset', font=("", 40),
-                                              fg_color=color_cyan, hover_color=color_cyan_dark,
+                                              fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK,
                                               command=lambda: self.confirm("reset"))
         self.reset_pos_button.pack(side="left", padx=10, pady=5)
 
         self.right_buttons_2_widgets_frame = ctk.CTkFrame(self.action_frame, fg_color='transparent')
         self.right_buttons_2_widgets_frame.pack()
         self.save_button = ctk.CTkButton(self.right_buttons_2_widgets_frame, text='Save', font=("", 40),
-                                         fg_color=color_cyan, hover_color=color_cyan_dark, width=240,
+                                         fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK, width=240,
                                          command=lambda: self.confirm("save"))
         self.save_button.pack(side="left", pady=5)
         self.load_button = ctk.CTkButton(self.right_buttons_2_widgets_frame, text='Load', font=("", 40),
-                                         fg_color=color_cyan, hover_color=color_cyan_dark,
+                                         fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK,
                                          command=self.load)
         self.load_button.pack(side="left", padx=10, pady=5)
 
         self.right_buttons_3_widgets_frame = ctk.CTkFrame(self.action_frame, fg_color='transparent')
         self.right_buttons_3_widgets_frame.pack()
         self.solution_button = ctk.CTkButton(self.right_buttons_3_widgets_frame, text='Sollution', font=("", 40),
-                                             fg_color=color_cyan, hover_color=color_cyan_dark, width=240,
+                                             fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK, width=240,
                                              command=lambda: self.confirm("solution"))
         self.solution_button.pack(side="left", pady=5)
         self.solve_button = ctk.CTkButton(self.right_buttons_3_widgets_frame, text='Solve', font=("", 40),
-                                          fg_color=color_cyan, hover_color=color_cyan_dark,
+                                          fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK,
                                           command=lambda: self.confirm("solve"))
         self.solve_button.pack(side="left", padx=10, pady=5)
 
         self.right_buttons_4_widgets_frame = ctk.CTkFrame(self.action_frame, fg_color='transparent')
         self.right_buttons_4_widgets_frame.pack()
         self.undo_button = ctk.CTkButton(self.right_buttons_4_widgets_frame, text='Undo', font=("", 40),
-                                         fg_color=color_cyan, hover_color=color_cyan_dark,
+                                         fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK,
                                          command=self.undo, width=240)
         self.undo_button.pack(side="left", pady=5)
         self.root.bind("<Control-z>", lambda e: self.undo())
         self.redo_button = ctk.CTkButton(self.right_buttons_4_widgets_frame, text='Redo', font=("", 40),
-                                         fg_color=color_cyan, hover_color=color_cyan_dark,
+                                         fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK,
                                          command=self.redo)
         self.redo_button.pack(side="left", padx=10, pady=5)
         self.root.bind("<Control-y>", lambda e: self.redo())
@@ -142,13 +145,13 @@ class App:
         self.balls_counter_frame.pack()
         self.balls_counter_label = ctk.CTkLabel(self.balls_counter_frame, text="Current Balls: 0\n"
                                                                                "Initial Balls: 0",
-                                                font=("", 35), text_color=color_orange)
+                                                font=("", 35), text_color=COLOR_ORANGE)
         self.balls_counter_label.pack(pady=10)
 
         # rules root
         self.rules_root = ctk.CTkToplevel()
-        self.rules_root.title(title)
-        self.rules_root.after(201, lambda: self.rules_root.iconbitmap(logo_path))
+        self.rules_root.title(TITLE)
+        self.rules_root.after(201, lambda: self.rules_root.iconbitmap(LOGO_PATH))
         self.rules_root.geometry(f"{750}x{380}-{0}+{0}")
         self.rules_root.resizable(False, False)
         self.rules_root.attributes('-topmost', True)
@@ -156,10 +159,10 @@ class App:
 
         self.rules_main_frame = ctk.CTkFrame(self.rules_root, fg_color="transparent")
         self.rules_main_frame.pack()
-        self.name_rules_label = ctk.CTkLabel(self.rules_main_frame, text="Rules", text_color=color_orange,
+        self.name_rules_label = ctk.CTkLabel(self.rules_main_frame, text="Rules", text_color=COLOR_ORANGE,
                                              font=("", 60))
         self.name_rules_label.pack()
-        self.rules_label = ctk.CTkLabel(self.rules_main_frame, text_color=color_orange, font=("", 26),
+        self.rules_label = ctk.CTkLabel(self.rules_main_frame, text_color=COLOR_ORANGE, font=("", 26),
                                         text="Place the balls in the holes.\nThe middle hole must remain empty.\n"
                                              "You can start playing from anywhere on the board.\n"
                                              "You move by \'jumping\' one ball over another ball,\n"
@@ -175,8 +178,8 @@ class App:
         self.game_end_text2_strvar = ctk.StringVar()
 
         self.game_end_root = ctk.CTkToplevel()
-        self.game_end_root.title(title)
-        self.game_end_root.after(201, lambda: self.game_end_root.iconbitmap(logo_path))
+        self.game_end_root.title(TITLE)
+        self.game_end_root.after(201, lambda: self.game_end_root.iconbitmap(LOGO_PATH))
         self.game_end_root.geometry(f"{550}x{180}-{0}+{0}")
         self.game_end_root.resizable(False, False)
         self.game_end_root.attributes('-topmost', True)
@@ -185,18 +188,18 @@ class App:
         self.game_end_main_frame = ctk.CTkFrame(self.game_end_root, fg_color="transparent")
         self.game_end_main_frame.pack()
         self.game_end_congrats_label = ctk.CTkLabel(self.game_end_main_frame, textvariable=self.game_end_text1_strvar,
-                                                    text_color=color_orange, font=("", 60))
+                                                    text_color=COLOR_ORANGE, font=("", 60))
         self.game_end_congrats_label.pack(pady=5)
         self.name_game_end_label = ctk.CTkLabel(self.game_end_main_frame, textvariable=self.game_end_text2_strvar,
-                                                text_color=color_cyan, font=("", 60))
+                                                text_color=COLOR_CYAN, font=("", 60))
         self.name_game_end_label.pack(pady=5)
 
         # confirm root
         self.confirm_flavour_strvar = ctk.StringVar()
 
         self.confirm_root = ctk.CTkToplevel()
-        self.confirm_root.title(title)
-        self.confirm_root.after(201, lambda: self.confirm_root.iconbitmap(logo_path))
+        self.confirm_root.title(TITLE)
+        self.confirm_root.after(201, lambda: self.confirm_root.iconbitmap(LOGO_PATH))
         self.confirm_root.geometry("750x200")
         self.confirm_root.resizable(False, False)
         self.confirm_root.attributes("-topmost", True)
@@ -205,15 +208,15 @@ class App:
         self.confirm_main_frame = ctk.CTkFrame(self.confirm_root, fg_color="transparent")
         self.confirm_main_frame.pack()
         self.confirm_root_label = ctk.CTkLabel(self.confirm_main_frame, text="Are you sure you want to proceed",
-                                               font=("", 40), text_color=color_orange)
+                                               font=("", 40), text_color=COLOR_ORANGE)
         self.confirm_root_label.pack(pady=20)
         self.confirm_root_yes_button = ctk.CTkButton(self.confirm_main_frame, text='Yes', font=("", 40),
-                                                     fg_color=color_cyan, hover_color=color_cyan_dark,
+                                                     fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK,
                                                      command=self.confirm_root_yes_button_pressed)
 
         self.confirm_root_yes_button.pack(side="left", padx=70, pady=25)
         self.confirm_root_no_button = ctk.CTkButton(self.confirm_main_frame, text='No', font=("", 40),
-                                                    fg_color=color_cyan, hover_color=color_cyan_dark,
+                                                    fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK,
                                                     command=self.confirm_exit)
         self.confirm_root_no_button.pack(side="right", padx=70, pady=25)
 
@@ -234,24 +237,24 @@ class App:
             pass
 
         self.dialog_root = ctk.CTkToplevel()
-        self.dialog_root.title(title)
-        self.dialog_root.after(201, lambda: self.dialog_root.iconbitmap(logo_path))
+        self.dialog_root.title(TITLE)
+        self.dialog_root.after(201, lambda: self.dialog_root.iconbitmap(LOGO_PATH))
         self.dialog_root.geometry("640x280")
         self.dialog_root.resizable(False, False)
         self.dialog_root.attributes("-topmost", True)
         self.dialog_root.protocol("WM_DELETE_WINDOW", self.save_exit)
 
         self.dialog_root_label = ctk.CTkLabel(self.dialog_root, text=self.save_text1, font=("", 40),
-                                              text_color=color_orange)
+                                              text_color=COLOR_ORANGE)
         self.dialog_root_label.pack(pady=20)
         self.dialog_root_entry = ctk.CTkEntry(self.dialog_root, width=350, height=40)
         self.dialog_root_entry.pack()
         self.dialog_root_ok_button = ctk.CTkButton(self.dialog_root, text='Ok', font=("", 40),
-                                                   fg_color=color_cyan, hover_color=color_cyan_dark,
+                                                   fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK,
                                                    command=self.dialog_root_ok_button_pressed)
         self.dialog_root_ok_button.pack(side="left", padx=70, pady=25)
         self.dialog_root_cancel_button = ctk.CTkButton(self.dialog_root, text='Cancel', font=("", 40),
-                                                       fg_color=color_cyan, hover_color=color_cyan_dark,
+                                                       fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK,
                                                        command=self.save_exit)
         self.dialog_root_cancel_button.pack(side="right", padx=70, pady=25)
 
@@ -260,8 +263,8 @@ class App:
         self.list_of_saves = []
 
         self.load_root = ctk.CTkToplevel()
-        self.load_root.title(title)
-        self.load_root.after(201, lambda: self.load_root.iconbitmap(logo_path))
+        self.load_root.title(TITLE)
+        self.load_root.after(201, lambda: self.load_root.iconbitmap(LOGO_PATH))
         self.load_root.geometry(f"{800}x{550}-{0}+{0}")
         self.load_root.resizable(False, False)
         self.load_root.attributes('-topmost', True)
@@ -270,25 +273,25 @@ class App:
         self.load_root_main_frame = ctk.CTkFrame(self.load_root, fg_color="transparent")
         self.load_root_main_frame.pack()
         self.load_root_label = ctk.CTkLabel(self.load_root_main_frame, text="Load saves", font=("", 60),
-                                            text_color=color_orange)
+                                            text_color=COLOR_ORANGE)
         self.load_root_label.pack(pady=20)
 
         self.load_root_saves_frame_1 = ctk.CTkFrame(self.load_root_main_frame, fg_color="transparent")
         self.load_root_saves_frame_1.pack()
         self.show_load_saves_page()
         self.load_root_load_button = ctk.CTkButton(self.load_root_main_frame, text='Load', font=("", 40),
-                                                   fg_color=color_cyan, hover_color=color_cyan_dark, width=200,
+                                                   fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK, width=200,
                                                    command=lambda: self.confirm("load"))
         self.load_root_load_button.pack(side="left", padx=70, pady=30)
         self.load_root_delete_button = ctk.CTkButton(self.load_root_main_frame, text='Delete', font=("", 40),
-                                                     fg_color=color_cyan, hover_color=color_cyan_dark, width=200,
+                                                     fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK, width=200,
                                                      command=lambda: self.confirm("delete"))
         self.load_root_delete_button.pack(side="right", padx=70, pady=30)
 
         # solution root
         self.solution_root = ctk.CTkToplevel()
-        self.solution_root.title(title)
-        self.solution_root.after(201, lambda: self.solution_root.iconbitmap(logo_path))
+        self.solution_root.title(TITLE)
+        self.solution_root.after(201, lambda: self.solution_root.iconbitmap(LOGO_PATH))
         self.solution_root.geometry(f"{750}x{380}-{0}+{0}")
         self.solution_root.resizable(False, False)
         self.solution_root.attributes('-topmost', True)
@@ -297,9 +300,9 @@ class App:
         self.solution_main_frame = ctk.CTkFrame(self.solution_root, fg_color="transparent")
         self.solution_main_frame.pack()
         self.name_solution_label = ctk.CTkLabel(self.solution_main_frame, text="Solution",
-                                                text_color=color_orange, font=("", 60))
+                                                text_color=COLOR_ORANGE, font=("", 60))
         self.name_solution_label.pack()
-        self.solution_label = ctk.CTkLabel(self.solution_main_frame, text_color=color_cyan, font=("", 30),
+        self.solution_label = ctk.CTkLabel(self.solution_main_frame, text_color=COLOR_CYAN, font=("", 30),
                                            text="")
         self.solution_label.pack(pady=10)
 
@@ -359,14 +362,14 @@ class App:
         self.root.update_idletasks()
 
     def inactivate_board(self):
-        for i, v1 in enumerate(self.board):
-            for j, v2 in enumerate(v1):
+        for i in range(self.board.size):
+            for j in range(self.board.size):
                 self.board_frame_list[i][j].unbind("<Button-1>")
                 self.board_label_list[i][j].unbind("<Button-1>")
 
     def activate_board(self):
-        for i, v1 in enumerate(self.board):
-            for j, v2 in enumerate(v1):
+        for i in range(self.board.size):
+            for j in range(self.board.size):
                 self.board_frame_list[i][j].bind("<Button-1>", lambda e, y=i, x=j: self.square_pressed(y, x))
                 self.board_label_list[i][j].bind("<Button-1>", lambda e, y=i, x=j: self.square_pressed(y, x))
 
@@ -437,7 +440,7 @@ class App:
         self.dialog_root.state("normal")
         self.dialog_root.grab_set()
         self.dialog_root.lift()
-        self.dialog_root.after(150, lambda: self.dialog_root_entry.focus())
+        self.dialog_root.after(150, self.dialog_root_entry.focus)
         self.dialog_root_entry.select_present()
         self.dialog_root_entry.delete(0, "end")
 
@@ -489,7 +492,7 @@ class App:
             w, h = self.game_frame.winfo_width(), self.game_frame.winfo_height()
             img = pyautogui.screenshot(region=(x, y, w, h))
             img.save(f"{dir_name}{text}.jpg")
-            pickle.dump(self.board, f)
+            pickle.dump(self.board.lightweight_serialize(), f)
 
     def load(self):
         if self.load_root.winfo_viewable() == 0:
@@ -536,8 +539,8 @@ class App:
             save_image_label.pack()
             save_radiobutton = ctk.CTkRadioButton(save_frame, text=save, variable=self.load_strvar, value=save,
                                                   command=self.save_chosen_radiobutton, font=("", 30),
-                                                  text_color=color_orange, hover_color=color_cyan_dark,
-                                                  fg_color=color_cyan, radiobutton_width=25, radiobutton_height=25,
+                                                  text_color=COLOR_ORANGE, hover_color=COLOR_CYAN_DARK,
+                                                  fg_color=COLOR_CYAN, radiobutton_width=25, radiobutton_height=25,
                                                   corner_radius=5)
             self.save_radiobutton_list.append(save_radiobutton)
             save_radiobutton.bind("<MouseWheel>", self.save_mouse_wheel)
@@ -604,9 +607,9 @@ class App:
             self.delete_board()
 
     def solution(self):
-        # s = t.perf_counter()
+        s = t.perf_counter()
         moves = list(enumerate(translate_moves(self.board.solution())))
-        # print(t.perf_counter() - s)
+        print(t.perf_counter() - s)
         size = 50
         text = "None"
 
@@ -640,8 +643,8 @@ class App:
     def solve(self):
         self.inactivate_board()
         self.buttons_on_off("disabled")
-        self.root.bind("<Control-y>", lambda e: 1 == 1)
-        self.root.bind("<Control-z>", lambda e: 1 == 1)
+        self.root.unbind("<Control-y>")
+        self.root.unbind("<Control-z>")
         self.board_solution = self.board.solution()
 
         thread = th.Thread(name="Solve_Thread", target=self.__solve_helper)
