@@ -185,8 +185,8 @@ class Board:
 
     def lightweight_serialize(self):
         """
-        Call it before serializing to make the serialized file lighter
-        Or don't if you want to have solution saved
+        Call it while serializing to make the serialized file lighter
+        Or don't if you want to have solution saved and make it larger
 
         :return: self
         """
