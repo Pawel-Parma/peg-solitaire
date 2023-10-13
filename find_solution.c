@@ -1,33 +1,71 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <Python.h>
 
-// #include <iostream>
-// using namespace std;
 
 typedef struct {
-    int y;
-    int x;
+   int y;
+   int x;
+
 } Point;
 
 typedef struct {
-    Point p1;
-    Point p2;
-    Point p3;
+   Point p1;
+   Point p2;
+   Point p3;
+
 } Move;
 
+typedef struct {
+   Move* moves;
+   int size;
 
-Move process_move(Point move[2]) {
-    Move result;
+} pMove;
 
-    result.p1 = move[0];
-    result.p3 = move[1];
-    result.p2.y = (result.p1.y == result.p3.y) ? result.p1.y : ((result.p1.y < result.p3.y) ? result.p1.y + 1 : result.p1.y - 1);
-    result.p2.x = (result.p1.x == result.p3.x) ? result.p1.x : ((result.p1.x < result.p3.x) ? result.p1.x + 1 : result.p1.x - 1);
 
-    return result;
+Move NULL_MOVE = {.p1={.y = -1, .x = -1}, .p2={.y = -1, .x = -1}, .p3={.y = -1, .x = -1}};
+
+Move* solution_array;
+Move* solution_helper_array;
+int solution_len;
+int solution_curent_place = 0;
+int solved = 0;
+
+int count(int** board, int item) {
+   int result = 16;
+
+   for (int i = 0; i < 7; i++) {
+      for (int j = 0; j < 7; j++) {
+         result += (int) board[i][j];
+      }
+   }
+
+   return result;
+ }
+
+int is_won(int** board) {
+   return count(board, 1) == 1 && board[3][3] == 1;
+ }
+
+void interact(int** board, Point p) {
+   int y = p.y, x = p.x;
+   board[y][x] = (int) (! board[y][x]);
 }
 
-int is_move_legal(int board[7][7], Move move) {
+Move process_move(Point p1, Point p3) {
+   Move result;
+
+   result.p1 = p1;
+   result.p2.y = (p1.y == p3.y) ? p1.y : ((p1.y < p3.y) ? p1.y + 1 : p1.y - 1);
+   result.p2.x = (p1.x == p3.x) ? p1.x : ((p1.x < p3.x) ? p1.x + 1 : p1.x - 1);
+   result.p3 = p3;
+
+   return result;
+ }
+
+int is_move_legal(int** board, Move move) {
     int y1 = move.p1.y, x1 = move.p1.x;
     int y2 = move.p2.y, x2 = move.p2.x;
     int y3 = move.p3.y, x3 = move.p3.x;
@@ -45,167 +83,297 @@ int is_move_legal(int board[7][7], Move move) {
     return 0;
 }
 
-void swap(int *x, int *y){
-    int temp = *x;
-    *x = *y;
-    *y = temp;
+void board_move(int** board, Move move) {
+   interact(board, move.p1);
+   interact(board, move.p2);
+   interact(board, move.p3);
 }
-int rotate_2d_array_right(int mat[7][7]){
-   int n=4;
 
-   for(int i = 0; i < 7; i++){
-     for(int j = i + 1; j < 7; j++)
-         swap(&mat[i][j], &mat[j][i]);
-    }
+int** copy_board(int** board) {
+   int **board_copy;
+   board_copy = malloc(sizeof(int*) * 7);
 
-   for(int i = 0; i < 7; i++){
-     for(int j = 0; j < 3.5; j++){
-        swap(&mat[i][j], &mat[i][6 - j]);
-     }
+   for (int i = 0; i < 7; i++) {
+      board_copy[i] = malloc(sizeof(int) * 7);
+      for (int j = 0; j < 7; j++) {
+         board_copy[i][j] = board[i][j];
+         }
+      }
+
+   return board_copy;
+ }
+
+pMove legal_moves(int** board) {
+   Move* moves;
+   moves = malloc(sizeof(Move));
+   int current_place = 0;
+
+   for (int i = 0; i < 7; i++) {
+      for (int j = 0; j < 7; j++) {
+         if (board[i][j] == 1) {
+            if (j > 1) {
+               Point p1 = {.y = i, .x = j};
+               Point p2 = {.y = i, .x = j - 2};
+               Move processed_move = process_move(p1, p2);
+
+               if (is_move_legal(board, processed_move) == 1) {
+                  moves[current_place] = processed_move;
+                  current_place++;
+                  moves = realloc(moves, (current_place + 1) * sizeof(Move));
+               }
+            }
+
+            if (j < 5) {
+               Point p1 = {.y = i, .x = j};
+               Point p2 = {.y = i, .x = j + 2};
+               Move processed_move = process_move(p1, p2);
+
+               if (is_move_legal(board, processed_move) == 1) {
+                  moves[current_place] = processed_move;
+                  current_place++;
+                  moves = realloc(moves, (current_place + 1) * sizeof(Move));
+               }
+            }
+
+            if (i > 1) {
+               Point p1 = {.y = i, .x = j};
+               Point p2 = {.y = i - 2, .x = j};
+               Move processed_move = process_move(p1, p2);
+
+               if (is_move_legal(board, processed_move) == 1) {
+                  moves[current_place] = processed_move;
+                  current_place++;
+                  moves = realloc(moves, (current_place + 1) * sizeof(Move));
+               }
+            }
+
+            if (i < 5) {
+               Point p1 = {.y = i, .x = j};
+               Point p2 = {.y = i + 2, .x = j};
+               Move processed_move = process_move(p1, p2);
+
+               if (is_move_legal(board, processed_move) == 1) {
+                  moves[current_place] = processed_move;
+                  current_place++;
+                  moves = realloc(moves, (current_place + 1) * sizeof(Move));
+               }
+            }
+
+         }
+      }
    }
 
-//    def legal_moves(self):
-//        legal_moves = []
-//
-//        for i in range(self.size):
-//            for j in range(self.size):
-//                if self.board[i][j] == 1:
-//                    if j > 1:
-//                        if self.is_move_legal(((i, j), (i, j - 2))):
-//                            legal_moves.append(((i, j), (i, j - 2)))
-//
-//                    if j < 5:
-//                        if self.is_move_legal(((i, j), (i, j + 2))):
-//                            legal_moves.append(((i, j), (i, j + 2)))
-//
-//                    if i > 1:
-//                        if self.is_move_legal(((i, j), (i - 2, j))):
-//                            legal_moves.append(((i, j), (i - 2, j)))
-//                    if i < 5:
-//                        if self.is_move_legal(((i, j), (i + 2, j))):
-//                            legal_moves.append(((i, j), (i + 2, j)))
-//
-//        return legal_moves
+   pMove result = {.moves = moves, .size = current_place};
+   return result;
+}
+
+int** rotate_right(int** board) {
+   int **board_copy;
+   board_copy = malloc(sizeof(int*) * 7);
+
+   for (int i = 0; i < 7; i++) {
+      board_copy[i] = malloc(sizeof(int) * 7);
+      for (int j = 0; j < 7; j++) {
+         board_copy[i][j] = board[6 - j][i];
+         }
+      }
+
+   return board_copy;
+ }
 
 /*
-Move * legal_moves(int board[7][7], int size, int legal_moves[][2]) {
-    Move moves[]
 
-    for (int i = 0; i < 7; i++) {
-        for (int j = 0; j < 7; j++) {
-            if (board[i][j] == 1) {
-                if (j > 1) {
-                    Point p1;
-                    p1.y = i;
-                    p1.y = j;
+def __solution(self, board_object):
+    board_object_tuple = board_object.as_tuple()
 
-                    Point p2;
-                    p2.y = i;
-                    p2.y = j - 2;
+    if self.solved or board_object_tuple in self.done_boards:
+        return
 
-                    Move move = process_move({p1, p2});
+    self.done_boards.add(board_object_tuple)
 
-                    if (is_move_legal(board, move)) {
-                        moves[0] = move
-                    }
-                }
+    for _ in range(3):
+        board_object_tuple = rotate_2d_list_right(board_object_tuple)
+        self.done_boards.add(board_object_tuple)
 
-                if (j < 5) {
-                    Point p1;
-                    p1.y = i;
-                    p1.y = j;
+    for move in board_object.legal_moves():
+        new_board_object = Board(board_object.as_list())
+        new_board_object.move(move)
+        self.solution_list_helper.append(move)
 
-                    Point p2;
-                    p2.y = i;
-                    p2.y = j + 2;
+        if new_board_object.is_won() == 1:
+            self.solved = 1
+            self.solution_list = self.solution_list_helper.copy()
 
-                    Move move = process_move({p1, p2});
+            return
 
-                    if (is_move_legal(board, move)) {
-                        moves[1] = move
-                    }
-                }
+        self.__solution(new_board_object)
+        self.solution_list_helper.pop(-1)
 
-                if (i > 1) {
-                    Point p1;
-                    p1.y = i;
-                    p1.y = j;
-
-                    Point p2;
-                    p2.y = i - 2;
-                    p2.y = j;
-
-                    Move move = process_move({p1, p2});
-
-                    if (is_move_legal(board, move)) {
-                        moves[1] = move
-                    }
-                }
-
-                if (i < 5) {
-                    Point p1;
-                    p1.y = i;
-                    p1.y = j;
-
-                    Point p2;
-                    p2.y = i + 2;
-                    p2.y = j;
-
-                    Move move = process_move({p1, p2});
-
-                    if (is_move_legal(board, move)) {
-                        moves[1] = move
-                    }
-                }
-
-
-            }
-        }
-    }
-
-    return moves
-
-}
+    return
 
 */
 
+void __solution(int **board) {
+   if (solved == 1) {
+      return;
+   }
 
+   //
 
-Move * solution(){
+   pMove moves_legal_help = legal_moves(board);
+   Move* moves_legal = moves_legal_help.moves;
+   int moves_legal_size = moves_legal_help.size;
 
+   for (int i = 0; i < moves_legal_size; i++) {
+      int** new_board = copy_board(board);
+      board_move(new_board, moves_legal[i]);
+      solution_helper_array[solution_curent_place] = moves_legal[i];
+      solution_curent_place += 1;
+
+      if (is_won(new_board) == 1) {
+         solved = 1;
+         memcpy(solution_array, solution_helper_array, sizeof(Move) * solution_len);
+         return;
+      }
+
+      __solution(new_board);
+      solution_helper_array[solution_curent_place] = NULL_MOVE;
+      solution_curent_place -= 1;
+      //for (int j = 0; j < 7; j++) free(new_board[j]);
+      //free(new_board);
+   }
+
+   free(moves_legal);
+   return;
+ }
+
+Move* Csolution(int** board) {
+   solution_curent_place = 0;
+   solved = 0;
+   solution_len = count(board, 1) - 1;
+   solution_array = malloc(sizeof(Move) * solution_len);
+   solution_helper_array = malloc(sizeof(Move) * solution_len);
+
+   __solution(board);
+
+   return solution_array;
+ }
+
+int main() {
+   int board[7][7] = {{-1, -1, 0, 0, 0, -1, -1},
+                      {-1, -1, 0, 0, 0, -1, -1},
+                      {0, 0, 0, 0, 0, 0, 0},
+                      {0, 0, 0, 0, 1, 1, 0},
+                      {0, 0, 0, 0, 0, 0, 0},
+                      {-1, -1, 0, 0, 0, -1, -1},
+                      {-1, -1, 0, 0, 0, -1, -1}};
+   int** board_ptr;
+   board_ptr = malloc(sizeof(int*) * 7);
+   for (int i = 0; i < 7; i++) {
+      board_ptr[i] = malloc(sizeof(int) * 7);
+      for (int j = 0; j < 7; j++) {
+         board_ptr[i][j] = board[i][j];
+      }
+   }
+
+   printf("Show board:\n");
+   for (int i = 0; i < 7; i++) {
+      for (int j = 0; j < 7; j++) {
+         if (i > 1 && i < 5 && (j < 2 || j > 4)) {
+            printf(" ");
+         }
+
+         printf("%d ", board_ptr[i][j]);
+      }
+      printf("\n");
+   }
+
+   int board_count = count(board_ptr, 1);
+   printf("\nShow board count:\n%d\n", board_count);
+
+   int board_won = is_won(board_ptr);
+   printf("\nShow is won:\n%d\n\n", board_won);
+
+   Point p1 = {.y = 5, .x = 4};
+   Point p2 = {.y = 4, .x = 4};
+   Point p3 = {.y = 3, .x = 4};
+   interact(board_ptr, p1);
+   interact(board_ptr, p2);
+   interact(board_ptr, p3);
+   printf("Show interact:\n");
+   for (int i = 0; i < 7; i++) {
+      for (int j = 0; j < 7; j++) {
+         if (i > 1 && i < 5 && (j < 2 || j > 4)) {
+            printf(" ");
+         }
+
+         printf("%d ", board_ptr[i][j]);
+      }
+      printf("\n");
+   }
+
+   Move move = {.p1 = p1, .p2 = p2, .p3 = p3};
+   int board_move_legal = is_move_legal(board_ptr, move);
+   printf("\nShow if move legal:\n%d\n", board_move_legal);
+
+   int** board_copy = copy_board(board_ptr);
+   printf("\nShow board copy:\n");
+   for (int i = 0; i < 7; i++) {
+      for (int j = 0; j < 7; j++) {
+         if (i > 1 && i < 5 && (j < 2 || j > 4)) {
+            printf(" ");
+         }
+         printf("%d ", board_copy[i][j]);
+      }
+      printf("\n");
+   }
+
+   pMove struct_moves = legal_moves(board_ptr);
+   Move* board_legal_moves = struct_moves.moves;
+   int board_legal_moves_size = struct_moves.size;
+   printf("\nShow legal moves:\n");
+   for (int i = 0; i < board_legal_moves_size; i++) {
+      printf("(%d ", board_legal_moves[i].p1.y);
+      printf("%d), (", board_legal_moves[i].p1.x);
+      printf("%d ", board_legal_moves[i].p2.y);
+      printf("%d), (", board_legal_moves[i].p2.x);
+      printf("%d ", board_legal_moves[i].p3.y);
+      printf("%d)\n", board_legal_moves[i].p3.x);
+   }
+
+   int** board_rotated = rotate_right(board_ptr);
+   printf("\n\nShow rotated right:\n");
+   for (int i = 0; i < 7; i++) {
+      for (int j = 0; j < 7; j++) {
+         if (i > 1 && i < 5 && (j < 2 || j > 4)) {
+            printf(" ");
+         }
+         printf("%d ", board_ptr[i][j]);
+      }
+      printf("\n");
+   }
+   printf("\n");
+   for (int i = 0; i < 7; i++) {
+      for (int j = 0; j < 7; j++) {
+         if (i > 1 && i < 5 && (j < 2 || j > 4)) {
+            printf(" ");
+         }
+         printf("%d ", board_rotated[i][j]);
+      }
+      printf("\n");
+   }
+
+   Move* board_solution = Csolution(board_ptr);
+   printf("\nShow solution:\n");
+   for (int i = 0; i < 2; i++) {
+      printf("(%d ", board_solution[i].p1.y);
+      printf("%d), (", board_solution[i].p1.x);
+      printf("%d ", board_solution[i].p2.y);
+      printf("%d), (", board_solution[i].p2.x);
+      printf("%d ", board_solution[i].p3.y);
+      printf("%d)\n", board_solution[i].p3.x);
+   }
+
+   return 0;
 }
 
-int main()
-{
-    int board[7][7];
-    board[0][4] = 1;
-    board[0][3] = 1;
-
-    Point p1 = {.y = 0, .x = 4;};
-    Point p2 = {.y=0, .x=2};
-
-    Point move_before[] = {p1, p2};
-    Move move = process_move(move_before);
-
-    for (int i = 0; i < 7; i++) {
-        for (int j = 0; j < 7; j++) {
-            cout << board[i][j];
-        }
-
-        cout << endl;
-    }
-
-    cout << endl;
-
-    cout << move.p1.x << " " << move.p1.y << endl;
-    cout << move.p2.x << " " << move.p2.y << endl;
-    cout << move.p3.x << " " << move.p3.y << endl;
-    cout << endl;
-
-    // int move_legal = is_move_legal(board, move);
-
-    // cout << move_legal << endl;
-
-
-    return 0;
-}

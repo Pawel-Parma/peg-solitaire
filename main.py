@@ -627,7 +627,7 @@ class App:
 
     def __solve_helper(self):
         for move in self.board_solution:
-            # t.sleep(1)
+            t.sleep(1)
             self.board.move(move)
             self.history_tracker("move", move)
             self.update_board()
