@@ -33,16 +33,17 @@ int solved;
 
 Move move_process(Point p1, Point p3); //
 
+void board_print(int** board); //
 int board_count(int** board, int item); //
 int board_is_won(int** board); //
-int** board_copy(int** board); // ?&
-int** board_rotate_right(int** board); // ?&
-int** board_interact(int** board, Point p); // ?&
-int** board_move(int** board, Move move); //
+int** board_copy(int** board); //
+int** board_rotate_right(int** board); //
+void board_interact(int** board, Point p); // // ?&
+void board_move(int** board, Move move); // //
 int board_is_move_legal(int** board, Move move); //
 PtrL board_legal_moves(int** board); //
 
-void __solution(int** board);
+void __solution(int** board, int depth); // // ?&
 PtrL _solution(int** board); //
 Move* solution(int** board); //
 
@@ -58,13 +59,30 @@ Move move_process(Point p1, Point p3) {
     return result;
 }
 
+void board_print(int** board) {
+    for (int i = 0; i < 7; i++) {
+        for (int j = 0; j < 7; j++) {
+            if (board[i][j] != -1) {
+                printf("%d ", board[i][j]);
+            }
+            else {
+                printf("  ");
+            }
+        }
+
+        printf("\n");
+    }
+
+    printf("\n");
+}
+
 int board_count(int** board, int item) {
     int result = 0;
 
     for (int i = 0; i < 7; i++) {
         for (int j = 0; j < 7; j++) {
             if (board[i][j] == item) {
-                result += board[i][j];
+                result += 1;
             }
         }
     }
@@ -82,34 +100,13 @@ int** board_copy(int** board) {
 
     for (int i = 0; i < 7; i++) {
         result[i] = malloc(sizeof(int) * 7);
-        memcpy(result[i], &board[i], sizeof(int) * 7); // Dont know if it should be with or without "&"
+        memcpy(result[i], board[i], sizeof(int) * 7);
     }
 
     return result;
 }
 
 int** board_rotate_right(int** board) {
-    int** copy;
-    int** result;
-    copy = malloc(sizeof(int*) * 7);
-    result = malloc(sizeof(int*) * 7);
-
-    for (int i = 0; i < 7; i++) {
-        copy[i] = malloc(sizeof(int) * 7);
-        for (int j = 0; j < 7; j++) {
-            copy[i][j] = board[6 - j][i];
-        }
-    }
-
-    for (int i = 0; i < 7; i++) {
-        result[i] = malloc(sizeof(int) * 7);
-        memcpy(result[i], &copy[i], sizeof(int) * 7); // Dont know if it should be with or without "&"
-    }
-
-    return result;
-}
-
-int** board_interact(int** board, Point p) {
     int** copy; int** result;
     copy = malloc(sizeof(int*) * 7);
     result = malloc(sizeof(int*) * 7);
@@ -123,20 +120,43 @@ int** board_interact(int** board, Point p) {
 
     for (int i = 0; i < 7; i++) {
         result[i] = malloc(sizeof(int) * 7);
-        memcpy(result[i], &copy[i], sizeof(int) * 7); // Dont know if it should be with or without "&"
+        memcpy(result[i], copy[i], sizeof(int) * 7);
     }
 
     return result;
 }
 
-int** board_move(int** board, Move move) {
-    int** result;
+void board_interact(int** board, Point p) {
+    int y = p.y, x = p.x;
+    int v;
 
-    result = board_interact(board, move.p1);
-    result = board_interact(result, move.p2);
-    result = board_interact(result, move.p3);
+    printf("\n<Board 3> %d %d\n", y, x);
+    board_print(board);
 
-    return result;
+    // printf("\nBPTRPTR %d\n", board[y][x]);
+
+    //memcpy(&v, &board[y][x], sizeof(int));
+    //printf("%d\n", v);
+
+    printf("");
+
+    //v = !v;
+
+    printf("");
+
+   //board[y][x] = v;
+}
+
+void board_move(int** board, Move move) {
+    printf("\n<Board 1>\n");
+    board_print(board);
+
+    board_interact(board, move.p1);
+    board_interact(board, move.p2);
+    board_interact(board, move.p3);
+
+    printf("<Board 2>\n");
+    board_print(board);
 }
 
 int board_is_move_legal(int** board, Move move) {
@@ -221,10 +241,10 @@ PtrL board_legal_moves(int** board) {
 }
 
 
-void __solution(int** board) {
-    if (solved == 1) {
+void __solution(int** board, int depth) {
+    if (solved == 1 || depth > 4) {
         return;
-    }
+   }
 
    //
 
@@ -234,24 +254,21 @@ void __solution(int** board) {
 
    for (int i = 0; i < moves_legal_size; i++) {
       int** new_board = board_copy(board);
-      new_board = board_move(new_board, moves_legal[i]);
+      board_move(new_board, moves_legal[i]);
       solution_array_h[solution_curent_place] = moves_legal[i];
       solution_curent_place += 1;
 
       if (board_is_won(new_board) == 1) {
          solved = 1;
-         memcpy(solution_array, &solution_array_h, sizeof(Move) * solution_len);
+         memcpy(solution_array, &solution_array_h, sizeof(Move) * solution_len); // Dont know if it should be with or without "&"
          return;
       }
 
-      __solution(new_board);
+      __solution(new_board, depth + 1);
       solution_array_h[solution_curent_place] = NULL_MOVE;
       solution_curent_place -= 1;
-      //for (int j = 0; j < 7; j++) free(new_board[j]);
-      //free(new_board);
    }
 
-   //free(moves_legal);
    return;
 
 
@@ -264,7 +281,7 @@ PtrL _solution(int** board) {
     solution_array = malloc(sizeof(Move) * solution_len);
     solution_array_h = malloc(sizeof(Move) * solution_len);
 
-    __solution(board);
+    __solution(board, 0);
     PtrL result = {.ptr = solution_array, .len = solution_len};
 
     return result;
@@ -280,67 +297,74 @@ Move* solution(int** board) {
 int main() {
    clock_t start = clock();
 
+    /*
    int board[7][7] = {{-1, -1,  0,  0,  0, -1, -1},
                       {-1, -1,  0,  0,  0, -1, -1},
                       { 0,  0,  0,  0,  1,  0,  0},
                       { 1,  1,  1,  0,  1,  1,  0},
                       { 1,  1,  0,  1,  1,  1,  1},
                       {-1, -1,  1,  1,  1, -1, -1},
-                      {-1, -1,  1,  1,  0, -1, -1}};
+                      {-1, -1,  1,  1,  0, -1, -1}}; */
 
-   int** board_ptr;
-   board_ptr = malloc(sizeof(int*) * 7);
+    int board[7][7] = {{-1, -1,  0,  0,  0, -1, -1},
+                       {-1, -1,  0,  0,  0, -1, -1},
+                       { 0,  0,  0,  0,  0,  0,  0},
+                       { 0,  0,  0,  0,  0,  1,  0},
+                       { 0,  0,  0,  0,  1,  0,  0},
+                       {-1, -1,  0,  0,  1, -1, -1},
+                       {-1, -1,  0,  0,  0, -1, -1}};
 
-   printf("\nBoard:\n");
+    int** board_ptr;
+    board_ptr = malloc(sizeof(int*) * 7);
 
-   for (int i = 0; i < 7; i++) {
-      board_ptr[i] = malloc(sizeof(int) * 7);
+    printf("\nBoard:\n");
 
-      for (int j = 0; j < 7; j++) {
-         board_ptr[i][j] = board[i][j];
+    for (int i = 0; i < 7; i++) {
+        board_ptr[i] = malloc(sizeof(int) * 7);
 
-         if (board_ptr[i][j] != -1) {
-            printf("%d ", board_ptr[i][j]);
-         }
-         else {
-            printf("  ");
-         }
-      }
-      printf("\n");
-   }
+        for (int j = 0; j < 7; j++) {
+            board_ptr[i][j] = board[i][j];
+        }
+    }
+    board_print(board_ptr);
 
-   int solution_len = board_count(board_ptr, 1) - 1;
-   Move* board_solution = solution(board_ptr);
+    int** copy = board_copy(board_ptr);
+    printf("Copy:\n");
+    board_print(copy);
 
-   printf("\nSolution:\n", solution_len);
-   for (int i = 0; i < solution_len; i++) {
-      printf("%2d | ", i + 1);
-      printf("(%d ", board_solution[i].p1.y);
-      printf("%d); ", board_solution[i].p1.x);
-      printf("(%d ", board_solution[i].p2.y);
-      printf("%d); ", board_solution[i].p2.x);
-      printf("(%d ", board_solution[i].p3.y);
-      printf("%d);\n", board_solution[i].p3.x);
-      board_ptr = board_move(board_ptr, board_solution[i]);
-   }
+    int** rotate = board_rotate_right(copy);
+    printf("Rotate:\n");
+    board_print(rotate);
 
-   printf("\nSolved:\n");
-   for (int i = 0; i < 7; i++) {
-      for (int j = 0; j < 7; j++) {
-         if (board_ptr[i][j] != -1) {
-            printf("%d ", board_ptr[i][j]);
-         }
-         else {
-            printf("  ");
-         }
-      }
-      printf("\n");
-   }
+    Point p = {.y = 3, .x = 3};
+    board_interact(rotate, p);
+    printf("Interact:\n");
+    board_print(rotate);
 
-   clock_t end = clock();
-   double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
+    printf("Solution\n\n");
+    int solution_len = board_count(board_ptr, 1) - 1;
+    Move* board_solution = solution(board_ptr);
+    printf("\n\n");
 
-   printf("\nExecution time\n%lf s\n", time_spent);
+    printf("Solution:\n", solution_len);
+    for (int i = 0; i < solution_len; i++) {
+        printf("%2d | ", i + 1);
+        printf("(%d ", board_solution[i].p1.y);
+        printf("%d); ", board_solution[i].p1.x);
+        printf("(%d ", board_solution[i].p2.y);
+        printf("%d); ", board_solution[i].p2.x);
+        printf("(%d ", board_solution[i].p3.y);
+        printf("%d);\n", board_solution[i].p3.x);
+        board_move(board_ptr, board_solution[i]);
+    }
 
-   return 0;
+    printf("\nSolved\n:");
+    board_print(board_ptr);
+
+    clock_t end = clock();
+    double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
+
+    printf("Execution time\n%lf s\n", time_spent);
+
+    return 0;
 }
