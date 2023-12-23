@@ -746,5 +746,14 @@ class App:
         self.root.mainloop()
 
 
-app = App()
-app.run()
+def main():
+    app = App()
+    app.run()
+
+
+if __name__ == "__main__":
+    try:
+        main()
+
+    except KeyboardInterrupt:
+        print("Keyboard Interrupt, exiting...")
