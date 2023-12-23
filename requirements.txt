@@ -1,0 +1,5 @@
+natsort
+customtkinter
+pillow
+pyautogui
+packaging

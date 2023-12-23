@@ -1,5 +1,3 @@
-# Dependencies: natsort, customtkinter, pillow, pyautogui
-
 import pickle
 import os
 import threading as th
@@ -395,11 +393,14 @@ class App:
                                                     f"Initial Balls: {self.board.count(1)}")
             return
 
-        if state == 2:
+        elif state == 2:
             b = 1 if self.board.count(1) == 9 else 0
 
         elif state == 3:
             b = -1 if self.board.count(1) == 10 else 0
+
+        else:
+            b = 0
 
         self.balls_counter_label.configure(text=f"Current Balls: {self.board.count(1)}\n" +
                                                 self.balls_counter_label.cget('text')

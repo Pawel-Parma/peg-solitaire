@@ -15,4 +15,5 @@ the board
 and: 
  - play
  - get solution
+ - check rules
    
