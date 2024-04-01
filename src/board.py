@@ -16,7 +16,6 @@ class BoardIterator:
 class Board:
     def __init__(self, board=None):
         if board is None:
-
             self.board = [[-1, -1, 0, 0, 0, -1, -1],
                           [-1, -1, 0, 0, 0, -1, -1],
                           [0, 0, 0, 0, 0, 0, 0],
@@ -187,8 +186,6 @@ class Board:
         """
         Call it while serializing to make the serialized file lighter
         Or don't if you want to have solution saved and make it larger
-
-        :return: self
         """
 
         self.skip = self.solved = 0

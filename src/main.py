@@ -9,7 +9,7 @@ from PIL import Image
 import pyautogui
 
 from configuration import *
-from board import *
+from src.board import *
 
 
 # Implement Board Solution
@@ -229,7 +229,7 @@ class App:
         self.save_dir_name = ""
 
         try:
-            os.mkdir("Saves")
+            os.mkdir("saves")
 
         except:
             pass
@@ -454,7 +454,7 @@ class App:
 
         if self.save_dir_name is not None:
             if self.is_text_legal(self.save_dir_name):
-                if self.save_dir_name not in os.listdir("Saves"):
+                if self.save_dir_name not in os.listdir("saves"):
                     self.all_exit()
                     self.root.after(170, lambda: self.save_data(self.save_dir_name))
                     self.history, self.history_current_place = [], -1
@@ -485,7 +485,7 @@ class App:
         return 0
 
     def save_data(self, text):
-        dir_name = f"Saves\\{text}\\"
+        dir_name = f"saves\\{text}\\"
         os.mkdir(dir_name)
 
         with open(f"{dir_name}{text}.dat", 'wb') as f:
@@ -499,7 +499,7 @@ class App:
         if self.load_root.winfo_viewable() == 0:
             self.load_root.state("normal")
             self.load_root.lift()
-            self.list_of_saves = humansorted(os.listdir("Saves"))
+            self.list_of_saves = humansorted(os.listdir("saves"))
             self.load_folder_name = ""
             self.show_load_saves_page()
 
@@ -533,7 +533,7 @@ class App:
             save_frame.bind("<Button-1>", lambda e, name=i: self.save_chosen_other(name))
             save_frame.bind("<MouseWheel>", self.save_mouse_wheel)
             save_frame.pack(side="left", padx=30 * (i % 2))
-            save_image = ctk.CTkImage(dark_image=Image.open(f"Saves\\{save}\\{save}.jpg"), size=(210, 210))
+            save_image = ctk.CTkImage(dark_image=Image.open(f"saves\\{save}\\{save}.jpg"), size=(210, 210))
             save_image_label = ctk.CTkLabel(save_frame, text=None, image=save_image)
             save_image_label.bind("<Button-1>", lambda e, name=i: self.save_chosen_other(name))
             save_image_label.bind("<MouseWheel>", self.save_mouse_wheel)
@@ -557,17 +557,17 @@ class App:
 
     def load_board(self):
         self.reset()
-        with open(f"Saves\\{self.load_folder_name}\\{self.load_folder_name}.dat", "rb") as f:
+        with open(f"saves\\{self.load_folder_name}\\{self.load_folder_name}.dat", "rb") as f:
             self.board = pickle.load(f)
 
         self.update_board()
         self.balls_counter_update(1)
 
     def delete_board(self):
-        os.remove(f"Saves\\{self.load_folder_name}\\{self.load_folder_name}.dat")
-        os.remove(f"Saves\\{self.load_folder_name}\\{self.load_folder_name}.jpg")
-        os.rmdir(f"Saves\\{self.load_folder_name}")
-        self.list_of_saves = humansorted(os.listdir("Saves"))
+        os.remove(f"saves\\{self.load_folder_name}\\{self.load_folder_name}.dat")
+        os.remove(f"saves\\{self.load_folder_name}\\{self.load_folder_name}.jpg")
+        os.rmdir(f"saves\\{self.load_folder_name}")
+        self.list_of_saves = humansorted(os.listdir("saves"))
         self.load_folder_name = None
         self.show_load_saves_page()
 
