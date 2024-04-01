@@ -8,11 +8,8 @@ import customtkinter as ctk
 from PIL import Image
 import pyautogui
 
-from configuration import *
-from src.board import *
-
-
-# Implement Board Solution
+from .config import *
+from .board import *
 
 
 class App:
