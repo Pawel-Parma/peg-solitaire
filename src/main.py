@@ -158,7 +158,7 @@ class App:
                                              font=("", 60))
         self.name_rules_label.pack()
         self.rules_label = ctk.CTkLabel(self.rules_main_frame, text_color=COLOR_ORANGE, font=("", 26),
-                                        text="Place the balls in the holes.\nThe middle hole must remain empty.\n"
+                                        text="Place pegs in the holes.\nThe middle hole must remain empty.\n"
                                              "You can start playing from anywhere on the board.\n"
                                              "You move by \'jumping\' one ball over another ball,\n"
                                              "which is then removed from the board.\n"
