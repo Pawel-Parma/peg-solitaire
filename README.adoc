@@ -35,9 +35,9 @@ You can:
 image::examples/game1-solution.png[]
 
 
-For example let's take the first move of the solution: `C7D`
-The first two characters `C7` represent the peg that will be moved.
-The last character `D` represents the direction of the move.
+For example let's take the first move of the solution: `C7D` +
+The first two characters `C7` represent the peg that will be moved. +
+The last character `D` represents the direction of the move. +
 
 The direction is represented by the following characters:
  - `U` for up
