@@ -23,7 +23,8 @@ To get the rules of the game, click on the `Rules` button in the upper left corn
 Fill the board with pegs then press `Play` to start the game. +
 Select a peg and click on the destination cell to move the peg.
 
-You can: +
+You can:
+[disk]
  - restart the board by pressing the `Restart` button. +
  - save the current board by pressing the `Save` button. +
  - load a saved board by pressing the `Load` button. +
@@ -42,8 +43,9 @@ We will discuss the first move of the solution `C7D`: +
 The first two characters `C7` represent the peg that will be moved. +
 The last character `D` represents the direction of the move. +
 
-The direction is represented by the following characters: +
- * `U` for up +
- * `D` for down +
- * `L` for left +
- * `R` for right +
+The direction is represented by the following characters:
+[disk]
+ - `U` for up +
+ - `D` for down +
+ - `L` for left +
+ - `R` for right +
