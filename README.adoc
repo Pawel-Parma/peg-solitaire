@@ -16,7 +16,9 @@ Simple peg solitaire game written in python using customtkinter library.
 
 === Example:
 
-image::examples/game1.png[900, 562, opts=interactive]
+image::examples/game1.png[900, 562]
+
+{empty} +
 
 To get the rules of the game, click on the `Rules` button in the upper left corner.
 
@@ -38,6 +40,8 @@ You can:
 For example let's take solution of the previously shown board: +
 
 image::examples/game1-solution.png[900, 562]
+
+{empty} +
 
 We will discuss the first move of the solution `C7D`: +
 The first two characters `C7` represent the peg that will be moved. +
