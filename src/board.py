@@ -155,10 +155,8 @@ class Board:
 
     def __str__(self):
         ret = "\n   A B C D E F G \n"
-
         for i, j in enumerate(self.board):
             ret += f"{i + 1}  "
-
             for k in j:
                 if k == -1:
                     ret += "  "
@@ -170,7 +168,6 @@ class Board:
             ret += "\n"
 
         ret += "   A B C D E F G\n"
-
         return ret
 
     def as_list(self):

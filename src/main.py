@@ -117,7 +117,7 @@ class App:
 
         self.right_buttons_3_widgets_frame = ctk.CTkFrame(self.action_frame, fg_color='transparent')
         self.right_buttons_3_widgets_frame.pack()
-        self.solution_button = ctk.CTkButton(self.right_buttons_3_widgets_frame, text='Sollution', font=("", 40),
+        self.solution_button = ctk.CTkButton(self.right_buttons_3_widgets_frame, text='Solution', font=("", 40),
                                              fg_color=COLOR_CYAN, hover_color=COLOR_CYAN_DARK, width=240,
                                              command=lambda: self.confirm("solution"))
         self.solution_button.pack(side="left", pady=5)
@@ -425,7 +425,7 @@ class App:
         else:
             if self.board.is_legal_to_start():
                 self.playing = 1
-                self.play_setpos_button.configure(text="Set Positon")
+                self.play_setpos_button.configure(text="Set Position")
 
     def reset(self):
         if self.playing:
@@ -471,7 +471,7 @@ class App:
 
     def all_exit(self):
         exits = self.rules_exit, self.game_end_exit, self.confirm_exit, \
-                self.save_exit, self.load_exit, self.solution_exit
+            self.save_exit, self.load_exit, self.solution_exit
 
         for fun in exits:
             fun()
@@ -674,7 +674,7 @@ class App:
         elif self.history_current_place < len(self.history) - 1:
             if self.history[self.history_current_place][1] != action:
                 self.history = self.history[:self.history_current_place + 1 if
-                self.history_current_place < len(self.history) - 1 else None]
+                                                self.history_current_place < len(self.history) - 1 else None]
 
                 if state == "interact":
                     self.history.append(("I", action))
